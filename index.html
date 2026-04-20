@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Herrengolf Kosaido</title>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
   <style>
     :root{
       --bg:#0b1220;
@@ -98,6 +102,10 @@
     }
     .footer-note{margin-top:10px;font-size:13px;color:var(--muted)}
     .flight-meta{font-size:13px;color:var(--muted);margin-top:6px}
+    .status{margin-top:12px;color:var(--muted);font-size:13px}
+    .ok{color:#86efac}
+    .warn{color:#fcd34d}
+    .err{color:#fca5a5}
     @media (max-width: 900px){
       .hero{grid-template-columns:1fr}
       .grid{grid-template-columns:1fr}
@@ -114,14 +122,15 @@
   <div class="wrap">
     <section class="hero">
       <div>
-        <div class="badge">Dashboard</div>
+        <div class="badge">Cloud Dashboard</div>
         <h1 class="title">Herrengolf Kosaido</h1>
-        <p class="sub">Flights generieren, Flight-Historie merken und Wiederholungen minimieren.</p>
+        <p class="sub">Flights generieren, gemeinsame Historie merken und Wiederholungen minimieren.</p>
         <p class="footer-note" id="today"></p>
+        <p class="status" id="cloudStatus">Verbinde mit Cloud …</p>
       </div>
       <div class="hero-right">
         <div class="stat"><div class="k">Ausgewählte Spieler</div><div class="v" id="countSelected">0</div></div>
-        <div class="stat"><div class="k">Gespielte Runden</div><div class="v" id="countRounds">0</div></div>
+        <div class="stat"><div class="k">Cloud-Runden</div><div class="v" id="countRounds">0</div></div>
         <div class="stat"><div class="k">Einzigartige Flights</div><div class="v" id="countFlights">0</div></div>
         <div class="stat"><div class="k">Aufteilung</div><div class="v" style="font-size:16px;line-height:1.3" id="layoutInfo">–</div></div>
       </div>
@@ -136,7 +145,7 @@
           <button class="btn-secondary" id="lastBtn">📅 Letzte Runde</button>
           <button class="btn-secondary" id="allBtn">Alle auswählen</button>
           <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
-          <button class="btn-danger" id="resetBtn">♻️ Alles zurücksetzen</button>
+          <button class="btn-danger" id="resetBtn">♻️ Cloud-Daten löschen</button>
         </div>
         <div class="hint">Golf-Logik: 3 → 3er, 4 → 4er, 5 → 3+2, 6 → 3+3, 7 → 4+3, 8 → 4+4, 9 → 4+3+2, 10 → 4+3+3, 11 → 4+4+3.</div>
       </section>
@@ -162,22 +171,52 @@
   </div>
 
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAODae-cw89uBzGlYbJJH_xmxs_gqYGl-k",
+      authDomain: "herrengolf-kosaido.firebaseapp.com",
+      projectId: "herrengolf-kosaido",
+      storageBucket: "herrengolf-kosaido.firebasestorage.app",
+      messagingSenderId: "755587813680",
+      appId: "1:755587813680:web:bf2fc6215ef75e954478f5",
+      measurementId: "G-TF68EQCGJS"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     const allPlayers = [
       "Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider",
       "Jörg","Martin","Carsten","Felix","Carl","Sascha"
     ];
 
     let selected = new Set();
-    let flightHistory = JSON.parse(localStorage.getItem("hgk_flight_history") || "{}");
-    let rounds = JSON.parse(localStorage.getItem("hgk_rounds") || "[]");
+    let rounds = [];
+    let flightHistory = {};
 
     document.getElementById("today").innerText =
       new Date().toLocaleDateString("de-DE", {
         weekday:"long", year:"numeric", month:"long", day:"numeric"
       });
 
+    function setCloudStatus(text, cls=""){
+      const el = document.getElementById("cloudStatus");
+      el.className = "status " + cls;
+      el.textContent = text;
+    }
+
     function normalizeFlight(group){
       return [...group].sort((a,b) => a.localeCompare(b, "de")).join(" | ");
+    }
+
+    function rebuildHistoryFromRounds(){
+      const history = {};
+      rounds.forEach(round => {
+        (round.groups || []).forEach(group => {
+          const key = normalizeFlight(group);
+          history[key] = (history[key] || 0) + 1;
+        });
+      });
+      flightHistory = history;
     }
 
     function getPreferredLayout(count){
@@ -297,23 +336,6 @@
       return bestGroups;
     }
 
-    function saveRound(groups){
-      groups.forEach(group => {
-        const key = normalizeFlight(group);
-        flightHistory[key] = (flightHistory[key] || 0) + 1;
-      });
-
-      rounds.push({
-        date: new Date().toLocaleDateString("de-DE"),
-        groups
-      });
-
-      localStorage.setItem("hgk_flight_history", JSON.stringify(flightHistory));
-      localStorage.setItem("hgk_rounds", JSON.stringify(rounds));
-      updateTopStats();
-      renderStats();
-    }
-
     function renderRound(groups){
       const output = document.getElementById("output");
       if(!groups || groups.length === 0){
@@ -332,15 +354,54 @@
       `).join("");
     }
 
-    function generateRound(){
+    async function loadRounds(){
+      setCloudStatus("Lade Cloud-Daten …");
+      try{
+        const snap = await db.collection("rounds").orderBy("createdAt", "asc").get();
+        rounds = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        rebuildHistoryFromRounds();
+        renderStats();
+        updateTopStats();
+
+        if(rounds.length > 0){
+          renderRound(rounds[rounds.length - 1].groups);
+        }
+
+        setCloudStatus("Cloud verbunden.", "ok");
+      }catch(err){
+        console.error(err);
+        setCloudStatus("Cloud-Fehler. Prüfe Firestore und die Regeln.", "err");
+      }
+    }
+
+    async function generateRound(){
       const players = Array.from(selected);
       if(players.length < 3){
         alert("Bitte mindestens 3 Spieler auswählen.");
         return;
       }
+
       const groups = createGroups(players);
-      saveRound(groups);
-      renderRound(groups);
+      const round = {
+        date: new Date().toLocaleDateString("de-DE"),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        groups
+      };
+
+      try{
+        setCloudStatus("Speichere Runde in der Cloud …", "warn");
+        const ref = await db.collection("rounds").add(round);
+        rounds.push({ id: ref.id, ...round });
+        rebuildHistoryFromRounds();
+        renderStats();
+        updateTopStats();
+        renderRound(groups);
+        setCloudStatus("Runde gespeichert.", "ok");
+      }catch(err){
+        console.error(err);
+        setCloudStatus("Speichern fehlgeschlagen. Prüfe Firestore-Regeln.", "err");
+        alert("Speichern fehlgeschlagen. Bitte Firestore prüfen.");
+      }
     }
 
     function showLastRound(){
@@ -351,17 +412,28 @@
       renderRound(rounds[rounds.length - 1].groups);
     }
 
-    function resetAll(){
-      if(!confirm("Wirklich alle lokalen Daten löschen?")) return;
-      localStorage.removeItem("hgk_flight_history");
-      localStorage.removeItem("hgk_rounds");
-      flightHistory = {};
-      rounds = [];
-      selected.clear();
-      renderPlayers();
-      renderStats();
-      renderRound([]);
-      updateTopStats();
+    async function resetAll(){
+      if(!confirm("Wirklich alle Cloud-Daten löschen?")) return;
+      try{
+        setCloudStatus("Lösche Cloud-Daten …", "warn");
+        const snap = await db.collection("rounds").get();
+        const batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+
+        rounds = [];
+        flightHistory = {};
+        selected.clear();
+        renderPlayers();
+        renderStats();
+        renderRound([]);
+        updateTopStats();
+        setCloudStatus("Alle Cloud-Daten wurden gelöscht.", "ok");
+      }catch(err){
+        console.error(err);
+        setCloudStatus("Löschen fehlgeschlagen.", "err");
+        alert("Löschen fehlgeschlagen. Bitte Firestore prüfen.");
+      }
     }
 
     document.getElementById("generateBtn").addEventListener("click", generateRound);
@@ -373,6 +445,7 @@
     renderPlayers();
     renderStats();
     updateTopStats();
+    loadRounds();
   </script>
 </body>
 </html>
