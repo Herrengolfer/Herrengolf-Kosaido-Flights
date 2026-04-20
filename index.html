@@ -12,7 +12,7 @@
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0a1020 0%, #0c1424 100%);color:var(--text)}
-    .wrap{max-width:1280px;margin:0 auto;padding:24px}
+    .wrap{max-width:1320px;margin:0 auto;padding:24px}
     .hero{background:linear-gradient(135deg,#0f172a,#14213a 60%,#102948);border:1px solid var(--border);border-radius:24px;padding:22px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.4fr .9fr;gap:18px;margin-bottom:20px}
     .title{font-size:32px;font-weight:800;letter-spacing:.2px;margin:0 0 6px}
     .sub{color:var(--muted);margin:0}
@@ -28,16 +28,17 @@
     .player:hover{transform:translateY(-1px)}
     .player.active{background:linear-gradient(135deg,var(--accent),#22c55e);color:#04110c;border-color:transparent;font-weight:700}
     .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-    button, select{
+    button, select, input{
       border-radius:14px;padding:12px 16px;font-size:15px;transition:.18s ease
     }
     button{border:0;font-weight:700;cursor:pointer}
     button:hover{transform:translateY(-1px)}
-    select{border:1px solid var(--border);background:#0f172a;color:var(--text);width:100%}
+    select, input{border:1px solid var(--border);background:#0f172a;color:var(--text);width:100%}
     .btn-primary{background:linear-gradient(135deg,var(--accent),#22c55e);color:#04110c}
     .btn-secondary{background:#22304a;color:var(--text);border:1px solid var(--border)}
     .btn-danger{background:#3a1f27;color:#ffd7d7;border:1px solid #61313f}
     .btn-gold{background:linear-gradient(135deg,var(--gold),#f59e0b);color:#1f1400}
+    .btn-small{padding:8px 12px;font-size:13px;border-radius:10px}
     .muted{color:var(--muted);font-size:14px}
     .output-grid{display:grid;gap:14px}
     .flight{background:linear-gradient(180deg,#111a2c,#0e1626);border:1px solid var(--border);border-radius:16px;padding:14px}
@@ -45,7 +46,7 @@
     .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
     .chip{background:#1d2a44;border:1px solid #2d3d61;border-radius:999px;padding:8px 12px;font-size:14px}
     table{width:100%;border-collapse:collapse;font-size:14px}
-    th, td{text-align:left;padding:10px;border-bottom:1px solid var(--border)}
+    th, td{text-align:left;padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
     th{color:var(--muted);font-weight:700}
     .hint{margin-top:10px;color:var(--muted);font-size:13px}
     .badge{display:inline-block;background:#16243d;border:1px solid #294067;padding:6px 10px;border-radius:999px;font-size:12px;color:#cfe0ff}
@@ -58,6 +59,9 @@
     .rank-1 td:first-child{color:var(--gold);font-weight:800}
     .rank-2 td:first-child{color:#d1d5db;font-weight:700}
     .rank-3 td:first-child{color:#d97706;font-weight:700}
+    .hc-grid{display:grid;grid-template-columns:1.3fr .7fr auto;gap:10px;align-items:center}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted);font-size:12px}
+    .weekplan{display:grid;gap:12px}
     @media (max-width:980px){
       .hero{grid-template-columns:1fr}
       .grid{grid-template-columns:1fr}
@@ -67,7 +71,7 @@
       .wrap{padding:14px}
       .title{font-size:26px}
       .hero-right{grid-template-columns:1fr}
-      .winner-box{grid-template-columns:1fr}
+      .winner-box,.hc-grid{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -77,7 +81,7 @@
       <div>
         <div class="badge">Cloud Dashboard</div>
         <h1 class="title">Herrengolf Kosaido</h1>
-        <p class="sub">Flights generieren, Ergebnisse speichern, Ranking führen und gemeinsame Historie merken.</p>
+        <p class="sub">Flights generieren, Ergebnisse speichern, Ranking führen, Wochen-Spielplan vorschlagen und Handicap berücksichtigen.</p>
         <p class="footer-note" id="today"></p>
         <p class="status" id="cloudStatus">Verbinde mit Cloud …</p>
       </div>
@@ -95,21 +99,22 @@
         <div class="players" id="players"></div>
         <div class="toolbar">
           <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
-          <button class="btn-secondary" id="lastBtn">📅 Letzte Runde</button>
+          <button class="btn-secondary" id="weekPlanBtn">📅 Wochen-Spielplan</button>
+          <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
           <button class="btn-secondary" id="allBtn">Alle auswählen</button>
           <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
           <button class="btn-danger" id="resetBtn">♻️ Cloud-Daten löschen</button>
         </div>
-        <div class="hint">Golf-Logik: 3 → 3er, 4 → 4er, 5 → 3+2, 6 → 3+3, 7 → 4+3, 8 → 4+4, 9 → 4+3+2, 10 → 4+3+3, 11 → 4+4+3.</div>
+        <div class="hint">Die Flight-Erstellung minimiert Wiederholungen und berücksichtigt zusätzlich die Handicap-Balance innerhalb der Woche.</div>
       </section>
 
       <section class="card">
-        <h2>Flight-Statistik</h2>
+        <h2>Handicaps</h2>
         <table>
-          <thead><tr><th>Flight</th><th>Wie oft gespielt</th></tr></thead>
-          <tbody id="statsBody"></tbody>
+          <thead><tr><th>Spieler</th><th>HCP</th><th>Aktion</th></tr></thead>
+          <tbody id="handicapBody"></tbody>
         </table>
-        <div class="hint">Gezählt wird die komplette Flight-Zusammensetzung, nicht einzelne Zweierpaarungen.</div>
+        <div class="hint">Vorbelegte Handicaps können direkt in der App angepasst werden. Fehlende Werte bleiben editierbar.</div>
       </section>
     </div>
 
@@ -118,11 +123,11 @@
         <h2>Ranking</h2>
         <table>
           <thead>
-            <tr><th>Platz</th><th>Spieler</th><th>Punkte</th><th>Siege</th><th>Runden</th></tr>
+            <tr><th>Platz</th><th>Spieler</th><th>Flight-Siege</th><th>Runden</th><th>Siegquote</th></tr>
           </thead>
           <tbody id="rankingBody"></tbody>
         </table>
-        <div class="hint">Wertung aktuell: 1 Flight-Sieg = 1 Punkt. Bei 2 Flights gibt es also 2 Gewinner mit je 1 Punkt.</div>
+        <div class="hint">1 Flight-Sieg = 1 Punkt bzw. 1 Flight-Sieg im Ranking.</div>
       </section>
 
       <section class="card">
@@ -136,6 +141,25 @@
       </section>
     </div>
 
+    <div class="grid" style="margin-top:20px">
+      <section class="card">
+        <h2>Flight-Statistik</h2>
+        <table>
+          <thead><tr><th>Flight</th><th>Wie oft gespielt</th></tr></thead>
+          <tbody id="statsBody"></tbody>
+        </table>
+        <div class="hint">Gezählt wird die komplette Flight-Zusammensetzung, nicht einzelne Zweierpaarungen.</div>
+      </section>
+
+      <section class="card">
+        <h2>Wochen-Spielplan</h2>
+        <div id="weekPlanOutput" class="weekplan">
+          <div class="muted">Noch kein Spielplan erstellt.</div>
+        </div>
+        <div class="hint">Der Vorschlag berücksichtigt bekannte Wiederholungen und Handicap-Ausgleich.</div>
+      </section>
+    </div>
+
     <section class="card" style="margin-top:20px">
       <h2>Flights & Ergebnisse</h2>
       <div id="output" class="output-grid"><div class="muted">Noch keine Runde erzeugt.</div></div>
@@ -144,7 +168,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs, addDoc, query, orderBy, serverTimestamp, writeBatch, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, addDoc, query, orderBy, serverTimestamp, writeBatch, doc, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAODae-cw89uBzGlYbJJH_xmxs_gqYGl-k",
@@ -160,11 +184,27 @@
     const db = getFirestore(app);
 
     const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha"];
+
+    const defaultHandicaps = {
+      "Luci": 11.0,
+      "Dolli": 16.7,
+      "Carl": 10.5,
+      "Thomas Wimmer": 19.7,
+      "Sascha": 19.7,
+      "Martin": 18.4,
+      "Thomas Schneider": 21.0,
+      "Carsten": 15.7,
+      "Dickie": 21.2,
+      "Jörg": 25.0,
+      "Felix": 15.2
+    };
+
     let selected = new Set();
     let rounds = [];
     let flightHistory = {};
     let playerStats = {};
     let partnerStats = {};
+    let handicaps = {};
 
     document.getElementById("today").innerText = new Date().toLocaleDateString("de-DE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 
@@ -176,10 +216,6 @@
 
     function normalizeFlight(group){
       return [...group].sort((a,b) => a.localeCompare(b, "de")).join(" | ");
-    }
-
-    function normalizePair(a, b){
-      return [a, b].sort((x,y) => x.localeCompare(y, "de")).join(" | ");
     }
 
     function dbGroupsToArrays(groups){
@@ -202,13 +238,32 @@
       });
     }
 
+    function handicapValue(name){
+      const value = handicaps[name];
+      return typeof value === "number" && !Number.isNaN(value) ? value : null;
+    }
+
+    function groupHandicapAverage(group){
+      const vals = group.map(handicapValue).filter(v => v !== null);
+      if(vals.length === 0) return null;
+      return vals.reduce((a,b) => a+b, 0) / vals.length;
+    }
+
+    function handicapBalancePenalty(groups){
+      const avgs = groups.map(groupHandicapAverage).filter(v => v !== null);
+      if(avgs.length <= 1) return 0;
+      const max = Math.max(...avgs);
+      const min = Math.min(...avgs);
+      return Math.pow(max - min, 2);
+    }
+
     function rebuildAllStats(){
       const history = {};
       const pStats = {};
       const pPartners = {};
 
       allPlayers.forEach(name => {
-        pStats[name] = { rounds: 0, wins: 0, points: 0 };
+        pStats[name] = { rounds: 0, wins: 0 };
         pPartners[name] = {};
       });
 
@@ -218,7 +273,7 @@
           history[key] = (history[key] || 0) + 1;
 
           group.forEach(player => {
-            if(!pStats[player]) pStats[player] = { rounds: 0, wins: 0, points: 0 };
+            if(!pStats[player]) pStats[player] = { rounds: 0, wins: 0 };
             pStats[player].rounds += 1;
           });
 
@@ -233,7 +288,6 @@
           const winner = round.results?.[idx]?.winner || "";
           if(winner && group.includes(winner)){
             pStats[winner].wins += 1;
-            pStats[winner].points += 1;
           }
         });
       });
@@ -281,14 +335,34 @@
       const container = document.getElementById("players");
       container.innerHTML = "";
       allPlayers.forEach((name) => {
+        const hcp = handicapValue(name);
+        const label = hcp === null ? `${name} (HCP offen)` : `${name} (${hcp.toFixed(1)})`;
         const el = document.createElement("button");
         el.type = "button";
         el.className = "player" + (selected.has(name) ? " active" : "");
-        el.textContent = name;
+        el.textContent = label;
         el.addEventListener("click", () => togglePlayer(name));
         container.appendChild(el);
       });
       updateTopStats();
+    }
+
+    function renderHandicaps(){
+      const tbody = document.getElementById("handicapBody");
+      tbody.innerHTML = allPlayers.map(name => {
+        const val = handicapValue(name);
+        return `
+          <tr>
+            <td>${name}</td>
+            <td><input type="number" step="0.1" id="hcp-${cssSafe(name)}" value="${val === null ? '' : val}" placeholder="z. B. 18.4"></td>
+            <td><button class="btn-secondary btn-small" data-player="${name}">Speichern</button></td>
+          </tr>
+        `;
+      }).join("");
+
+      tbody.querySelectorAll("button[data-player]").forEach(btn => {
+        btn.addEventListener("click", () => saveHandicap(btn.getAttribute("data-player")));
+      });
     }
 
     function renderFlightStats(){
@@ -305,7 +379,6 @@
       const tbody = document.getElementById("rankingBody");
       const rows = Object.entries(playerStats)
         .sort((a,b) =>
-          (b[1].points - a[1].points) ||
           (b[1].wins - a[1].wins) ||
           (b[1].rounds - a[1].rounds) ||
           a[0].localeCompare(b[0], "de")
@@ -320,9 +393,9 @@
         <tr class="${idx===0?'rank-1':idx===1?'rank-2':idx===2?'rank-3':''}">
           <td>${idx + 1}</td>
           <td>${name}</td>
-          <td>${stats.points}</td>
           <td>${stats.wins}</td>
           <td>${stats.rounds}</td>
+          <td>${stats.rounds ? Math.round((stats.wins / stats.rounds)*100) : 0}%</td>
         </tr>
       `).join("");
     }
@@ -369,6 +442,7 @@
     function score(groups){
       let s = 0;
       groups.forEach(group => { s += flightHistory[normalizeFlight(group)] || 0; });
+      s += handicapBalancePenalty(groups) * 2;
       return s;
     }
 
@@ -385,13 +459,37 @@
     function createGroups(players){
       const layout = getPreferredLayout(players.length);
       let bestGroups = null, bestScore = Infinity;
-      for(let attempt=0; attempt<6000; attempt++){
+      for(let attempt=0; attempt<7000; attempt++){
         const shuffled = [...players].sort(() => Math.random() - 0.5);
         const groups = buildGroupsByLayout(shuffled, layout);
         const currentScore = score(groups);
         if(currentScore < bestScore){ bestScore = currentScore; bestGroups = groups; }
       }
       return bestGroups;
+    }
+
+    function suggestWeekPlan(players){
+      const base = createGroups(players);
+      const groups = base.map(group => {
+        const avg = groupHandicapAverage(group);
+        return { players: group, avgHcp: avg };
+      });
+      return groups;
+    }
+
+    function renderWeekPlan(plan){
+      const box = document.getElementById("weekPlanOutput");
+      if(!plan || plan.length === 0){
+        box.innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
+        return;
+      }
+      box.innerHTML = plan.map((flight, idx) => `
+        <div class="flight">
+          <h3>Vorschlag ${idx + 1}</h3>
+          <div class="chips">${flight.players.map(name => `<div class="chip">${name}</div>`).join('')}</div>
+          <div class="flight-meta">Ø Handicap: ${flight.avgHcp === null ? 'offen' : flight.avgHcp.toFixed(1)}</div>
+        </div>
+      `).join('');
     }
 
     async function saveWinner(roundId, flightIndex, winner){
@@ -430,6 +528,7 @@
 
       output.innerHTML = groups.map((group, idx) => {
         const winner = results[idx]?.winner || "";
+        const avg = groupHandicapAverage(group);
         const options = ['<option value="">Gewinner wählen</option>']
           .concat(group.map(name => `<option value="${name}" ${winner===name?'selected':''}>${name}</option>`))
           .join("");
@@ -439,11 +538,10 @@
             <h3>Flight ${idx + 1}</h3>
             <div class="chips">${group.map(name => `<div class="chip">${name}</div>`).join("")}</div>
             <div class="flight-meta">Diese Konstellation wurde bisher ${flightHistory[normalizeFlight(group)] || 0}x gespielt.</div>
+            <div class="flight-meta">Ø Handicap: ${avg === null ? 'offen' : avg.toFixed(1)}</div>
             ${roundId ? `
               <div class="winner-box">
-                <select id="winner-${roundId}-${idx}">
-                  ${options}
-                </select>
+                <select id="winner-${roundId}-${idx}">${options}</select>
                 <button class="btn-gold" data-round="${roundId}" data-flight="${idx}">🏆 Ergebnis speichern</button>
               </div>
               ${winner ? `<div class="winner-tag">Gespeicherter Sieger: ${winner}</div>` : ''}
@@ -460,6 +558,51 @@
           saveWinner(roundId, flightIndex, select.value);
         });
       });
+    }
+
+    async function loadHandicaps(){
+      try{
+        const snap = await getDoc(doc(db, "meta", "handicaps"));
+        if(snap.exists()){
+          handicaps = { ...defaultHandicaps, ...(snap.data().values || {}) };
+        } else {
+          handicaps = { ...defaultHandicaps };
+          await setDoc(doc(db, "meta", "handicaps"), { values: handicaps });
+        }
+      }catch(err){
+        console.error("loadHandicaps", err);
+        handicaps = { ...defaultHandicaps };
+      }
+      renderPlayers();
+      renderHandicaps();
+    }
+
+    async function saveHandicap(player){
+      const input = document.getElementById(`hcp-${cssSafe(player)}`);
+      const raw = input.value.trim();
+      let value = null;
+      if(raw !== ""){
+        value = Number(raw.replace(",", "."));
+        if(Number.isNaN(value)){
+          alert("Bitte eine gültige Zahl eingeben.");
+          return;
+        }
+      }
+
+      if(value === null) delete handicaps[player];
+      else handicaps[player] = value;
+
+      try{
+        setCloudStatus("Speichere Handicap …", "warn");
+        await setDoc(doc(db, "meta", "handicaps"), { values: handicaps });
+        renderPlayers();
+        renderHandicaps();
+        setCloudStatus("Handicap gespeichert.", "ok");
+      }catch(err){
+        console.error("saveHandicap", err);
+        alert("Handicap konnte nicht gespeichert werden.");
+        setCloudStatus("Handicap speichern fehlgeschlagen.", "err");
+      }
     }
 
     async function loadRounds(){
@@ -544,6 +687,15 @@
       renderRound(last.groups, last.id, last.results);
     }
 
+    function createWeekPlan(){
+      const players = Array.from(selected);
+      if(players.length < 3){
+        alert("Bitte mindestens 3 Spieler auswählen.");
+        return;
+      }
+      renderWeekPlan(suggestWeekPlan(players));
+    }
+
     async function resetAll(){
       if(!confirm("Wirklich alle Cloud-Daten löschen?")) return;
       try{
@@ -561,6 +713,7 @@
         renderPlayers();
         renderAllStats();
         renderRound([]);
+        renderWeekPlan([]);
         setCloudStatus("Alle Cloud-Daten wurden gelöscht.", "ok");
       }catch(err){
         console.error("resetAll", err);
@@ -569,16 +722,21 @@
       }
     }
 
+    function cssSafe(value){
+      return value.replaceAll(" ", "_").replaceAll(".", "_").replaceAll("ä","ae").replaceAll("ö","oe").replaceAll("ü","ue").replaceAll("ß","ss");
+    }
+
     document.getElementById("generateBtn").addEventListener("click", generateRound);
+    document.getElementById("weekPlanBtn").addEventListener("click", createWeekPlan);
     document.getElementById("lastBtn").addEventListener("click", showLastRound);
     document.getElementById("allBtn").addEventListener("click", selectAll);
     document.getElementById("clearBtn").addEventListener("click", clearSelection);
     document.getElementById("resetBtn").addEventListener("click", resetAll);
 
-    renderPlayers();
+    await loadHandicaps();
     renderAllStats();
     updateTopStats();
-    loadRounds();
+    await loadRounds();
   </script>
 </body>
 </html>
