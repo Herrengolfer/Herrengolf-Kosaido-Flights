@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Herrengolf Kosaido</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#121a2b;
+      --panel-2:#182338;
+      --text:#ecf2ff;
+      --muted:#9fb0d1;
+      --accent:#34d399;
+      --danger:#f87171;
+      --border:#24314c;
+      --shadow:0 14px 40px rgba(0,0,0,.28);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:linear-gradient(180deg,#0a1020 0%, #0c1424 100%);
+      color:var(--text);
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:24px}
+    .hero{
+      background:linear-gradient(135deg, #0f172a, #14213a 60%, #102948);
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      display:grid;
+      grid-template-columns: 1.4fr .8fr;
+      gap:18px;
+      margin-bottom:20px;
+    }
+    .title{font-size:32px;font-weight:800;letter-spacing:.2px;margin:0 0 6px}
+    .sub{color:var(--muted);margin:0}
+    .hero-right{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+    .stat{
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px;
+    }
+    .stat .k{font-size:12px;color:var(--muted);margin-bottom:8px}
+    .stat .v{font-size:26px;font-weight:800}
+    .grid{display:grid;grid-template-columns: 1.05fr .95fr;gap:20px;align-items:start}
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .card h2{margin:0 0 14px;font-size:18px}
+    .players{display:flex;flex-wrap:wrap;gap:10px}
+    .player{
+      border:1px solid var(--border);
+      background:var(--panel-2);
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 14px;
+      cursor:pointer;
+      transition:.18s ease;
+      user-select:none;
+      font-size:14px;
+    }
+    .player:hover{transform:translateY(-1px)}
+    .player.active{
+      background:linear-gradient(135deg, var(--accent), #22c55e);
+      color:#04110c;
+      border-color:transparent;
+      font-weight:700;
+    }
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+    button{
+      border:0;border-radius:14px;padding:12px 16px;font-size:15px;font-weight:700;cursor:pointer;transition:.18s ease;
+    }
+    button:hover{transform:translateY(-1px)}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),#22c55e);color:#04110c}
+    .btn-secondary{background:#22304a;color:var(--text);border:1px solid var(--border)}
+    .btn-danger{background:#3a1f27;color:#ffd7d7;border:1px solid #61313f}
+    .muted{color:var(--muted);font-size:14px}
+    .output-grid{display:grid;gap:14px}
+    .flight{background:linear-gradient(180deg,#111a2c,#0e1626);border:1px solid var(--border);border-radius:16px;padding:14px}
+    .flight h3{margin:0 0 10px;font-size:17px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+    .chip{background:#1d2a44;border:1px solid #2d3d61;border-radius:999px;padding:8px 12px;font-size:14px}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th, td{text-align:left;padding:10px;border-bottom:1px solid var(--border)}
+    th{color:var(--muted);font-weight:700}
+    .hint{margin-top:10px;color:var(--muted);font-size:13px}
+    .badge{
+      display:inline-block;background:#16243d;border:1px solid #294067;padding:6px 10px;border-radius:999px;font-size:12px;color:#cfe0ff
+    }
+    .footer-note{margin-top:10px;font-size:13px;color:var(--muted)}
+    .flight-meta{font-size:13px;color:var(--muted);margin-top:6px}
+    @media (max-width: 900px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+      .hero-right{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 560px){
+      .wrap{padding:14px}
+      .title{font-size:26px}
+      .hero-right{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <div class="badge">Dashboard</div>
+        <h1 class="title">Herrengolf Kosaido</h1>
+        <p class="sub">Flights generieren, Flight-Historie merken und Wiederholungen minimieren.</p>
+        <p class="footer-note" id="today"></p>
+      </div>
+      <div class="hero-right">
+        <div class="stat"><div class="k">Ausgewählte Spieler</div><div class="v" id="countSelected">0</div></div>
+        <div class="stat"><div class="k">Gespielte Runden</div><div class="v" id="countRounds">0</div></div>
+        <div class="stat"><div class="k">Einzigartige Flights</div><div class="v" id="countFlights">0</div></div>
+        <div class="stat"><div class="k">Aufteilung</div><div class="v" style="font-size:16px;line-height:1.3" id="layoutInfo">–</div></div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Spieler auswählen</h2>
+        <div class="players" id="players"></div>
+        <div class="toolbar">
+          <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
+          <button class="btn-secondary" id="lastBtn">📅 Letzte Runde</button>
+          <button class="btn-secondary" id="allBtn">Alle auswählen</button>
+          <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
+          <button class="btn-danger" id="resetBtn">♻️ Alles zurücksetzen</button>
+        </div>
+        <div class="hint">Golf-Logik: 3 → 3er, 4 → 4er, 5 → 3+2, 6 → 3+3, 7 → 4+3, 8 → 4+4, 9 → 4+3+2, 10 → 4+3+3, 11 → 4+4+3.</div>
+      </section>
+
+      <section class="card">
+        <h2>Flight-Statistik</h2>
+        <table>
+          <thead>
+            <tr><th>Flight</th><th>Wie oft gespielt</th></tr>
+          </thead>
+          <tbody id="statsBody"></tbody>
+        </table>
+        <div class="hint">Gezählt wird die komplette Flight-Zusammensetzung, nicht einzelne Zweierpaarungen.</div>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:20px">
+      <h2>Flights</h2>
+      <div id="output" class="output-grid">
+        <div class="muted">Noch keine Runde erzeugt.</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const allPlayers = [
+      "Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider",
+      "Jörg","Martin","Carsten","Felix","Carl","Sascha"
+    ];
+
+    let selected = new Set();
+    let flightHistory = JSON.parse(localStorage.getItem("hgk_flight_history") || "{}");
+    let rounds = JSON.parse(localStorage.getItem("hgk_rounds") || "[]");
+
+    document.getElementById("today").innerText =
+      new Date().toLocaleDateString("de-DE", {
+        weekday:"long", year:"numeric", month:"long", day:"numeric"
+      });
+
+    function normalizeFlight(group){
+      return [...group].sort((a,b) => a.localeCompare(b, "de")).join(" | ");
+    }
+
+    function getPreferredLayout(count){
+      if(count < 3) return [];
+      if(count === 3) return [3];
+      if(count === 4) return [4];
+      if(count === 5) return [3,2];
+      if(count === 6) return [3,3];
+      if(count === 7) return [4,3];
+      if(count === 8) return [4,4];
+      if(count === 9) return [4,3,2];
+      if(count === 10) return [4,3,3];
+      if(count === 11) return [4,4,3];
+
+      const layout = [];
+      let remaining = count;
+      while(remaining > 11){
+        layout.push(4);
+        remaining -= 4;
+      }
+      return layout.concat(getPreferredLayout(remaining));
+    }
+
+    function formatLayout(layout){
+      return layout.length ? layout.join(" + ") : "–";
+    }
+
+    function updateTopStats(){
+      const currentLayout = getPreferredLayout(selected.size);
+      document.getElementById("countSelected").innerText = selected.size;
+      document.getElementById("countRounds").innerText = rounds.length;
+      document.getElementById("countFlights").innerText = Object.keys(flightHistory).length;
+      document.getElementById("layoutInfo").innerText = formatLayout(currentLayout);
+    }
+
+    function renderPlayers(){
+      const container = document.getElementById("players");
+      container.innerHTML = "";
+      allPlayers.forEach((name) => {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "player" + (selected.has(name) ? " active" : "");
+        el.textContent = name;
+        el.addEventListener("click", () => togglePlayer(name));
+        container.appendChild(el);
+      });
+      updateTopStats();
+    }
+
+    function renderStats(){
+      const tbody = document.getElementById("statsBody");
+      const entries = Object.entries(flightHistory).sort((a,b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return a[0].localeCompare(b[0], "de");
+      });
+
+      if(entries.length === 0){
+        tbody.innerHTML = '<tr><td colspan="2" class="muted">Noch keine Daten vorhanden.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = entries.map(([flight, count]) => `
+        <tr><td>${flight}</td><td>${count}x</td></tr>
+      `).join("");
+    }
+
+    function togglePlayer(name){
+      if(selected.has(name)) selected.delete(name);
+      else selected.add(name);
+      renderPlayers();
+    }
+
+    function selectAll(){
+      selected = new Set(allPlayers);
+      renderPlayers();
+    }
+
+    function clearSelection(){
+      selected.clear();
+      renderPlayers();
+    }
+
+    function score(groups){
+      let s = 0;
+      groups.forEach(group => {
+        const key = normalizeFlight(group);
+        s += flightHistory[key] || 0;
+      });
+      return s;
+    }
+
+    function buildGroupsByLayout(shuffledPlayers, layout){
+      const groups = [];
+      let index = 0;
+      layout.forEach(size => {
+        groups.push(shuffledPlayers.slice(index, index + size));
+        index += size;
+      });
+      return groups;
+    }
+
+    function createGroups(players){
+      const layout = getPreferredLayout(players.length);
+      let bestGroups = null;
+      let bestScore = Infinity;
+
+      for(let attempt=0; attempt<6000; attempt++){
+        const shuffled = [...players].sort(() => Math.random() - 0.5);
+        const groups = buildGroupsByLayout(shuffled, layout);
+        const currentScore = score(groups);
+
+        if(currentScore < bestScore){
+          bestScore = currentScore;
+          bestGroups = groups;
+        }
+      }
+      return bestGroups;
+    }
+
+    function saveRound(groups){
+      groups.forEach(group => {
+        const key = normalizeFlight(group);
+        flightHistory[key] = (flightHistory[key] || 0) + 1;
+      });
+
+      rounds.push({
+        date: new Date().toLocaleDateString("de-DE"),
+        groups
+      });
+
+      localStorage.setItem("hgk_flight_history", JSON.stringify(flightHistory));
+      localStorage.setItem("hgk_rounds", JSON.stringify(rounds));
+      updateTopStats();
+      renderStats();
+    }
+
+    function renderRound(groups){
+      const output = document.getElementById("output");
+      if(!groups || groups.length === 0){
+        output.innerHTML = '<div class="muted">Keine Flights vorhanden.</div>';
+        return;
+      }
+
+      output.innerHTML = groups.map((group, idx) => `
+        <div class="flight">
+          <h3>Flight ${idx + 1}</h3>
+          <div class="chips">
+            ${group.map(name => `<div class="chip">${name}</div>`).join("")}
+          </div>
+          <div class="flight-meta">Diese Konstellation wurde bisher ${flightHistory[normalizeFlight(group)] || 0}x gespielt.</div>
+        </div>
+      `).join("");
+    }
+
+    function generateRound(){
+      const players = Array.from(selected);
+      if(players.length < 3){
+        alert("Bitte mindestens 3 Spieler auswählen.");
+        return;
+      }
+      const groups = createGroups(players);
+      saveRound(groups);
+      renderRound(groups);
+    }
+
+    function showLastRound(){
+      if(rounds.length === 0){
+        alert("Noch keine Runde gespeichert.");
+        return;
+      }
+      renderRound(rounds[rounds.length - 1].groups);
+    }
+
+    function resetAll(){
+      if(!confirm("Wirklich alle lokalen Daten löschen?")) return;
+      localStorage.removeItem("hgk_flight_history");
+      localStorage.removeItem("hgk_rounds");
+      flightHistory = {};
+      rounds = [];
+      selected.clear();
+      renderPlayers();
+      renderStats();
+      renderRound([]);
+      updateTopStats();
+    }
+
+    document.getElementById("generateBtn").addEventListener("click", generateRound);
+    document.getElementById("lastBtn").addEventListener("click", showLastRound);
+    document.getElementById("allBtn").addEventListener("click", selectAll);
+    document.getElementById("clearBtn").addEventListener("click", clearSelection);
+    document.getElementById("resetBtn").addEventListener("click", resetAll);
+
+    renderPlayers();
+    renderStats();
+    updateTopStats();
+  </script>
+</body>
+</html>
