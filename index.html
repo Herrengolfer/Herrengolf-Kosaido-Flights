@@ -4,82 +4,30 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Herrengolf Kosaido</title>
-
   <style>
     :root{
-      --bg:#0b1220;
-      --panel:#121a2b;
-      --panel-2:#182338;
-      --text:#ecf2ff;
-      --muted:#9fb0d1;
-      --accent:#34d399;
-      --danger:#f87171;
-      --border:#24314c;
-      --shadow:0 14px 40px rgba(0,0,0,.28);
-      --radius:18px;
+      --bg:#0b1220; --panel:#121a2b; --panel-2:#182338; --text:#ecf2ff; --muted:#9fb0d1;
+      --accent:#34d399; --danger:#f87171; --border:#24314c; --shadow:0 14px 40px rgba(0,0,0,.28); --radius:18px;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:linear-gradient(180deg,#0a1020 0%, #0c1424 100%);
-      color:var(--text);
-    }
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0a1020 0%, #0c1424 100%);color:var(--text)}
     .wrap{max-width:1200px;margin:0 auto;padding:24px}
-    .hero{
-      background:linear-gradient(135deg, #0f172a, #14213a 60%, #102948);
-      border:1px solid var(--border);
-      border-radius:24px;
-      padding:22px;
-      box-shadow:var(--shadow);
-      display:grid;
-      grid-template-columns: 1.4fr .8fr;
-      gap:18px;
-      margin-bottom:20px;
-    }
+    .hero{background:linear-gradient(135deg,#0f172a,#14213a 60%,#102948);border:1px solid var(--border);border-radius:24px;padding:22px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.4fr .8fr;gap:18px;margin-bottom:20px}
     .title{font-size:32px;font-weight:800;letter-spacing:.2px;margin:0 0 6px}
     .sub{color:var(--muted);margin:0}
     .hero-right{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
-    .stat{
-      background:rgba(255,255,255,.03);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:14px;
-    }
+    .stat{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:18px;padding:14px}
     .stat .k{font-size:12px;color:var(--muted);margin-bottom:8px}
     .stat .v{font-size:26px;font-weight:800}
-    .grid{display:grid;grid-template-columns: 1.05fr .95fr;gap:20px;align-items:start}
-    .card{
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:18px;
-    }
+    .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:20px;align-items:start}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
     .card h2{margin:0 0 14px;font-size:18px}
     .players{display:flex;flex-wrap:wrap;gap:10px}
-    .player{
-      border:1px solid var(--border);
-      background:var(--panel-2);
-      color:var(--text);
-      border-radius:999px;
-      padding:10px 14px;
-      cursor:pointer;
-      transition:.18s ease;
-      user-select:none;
-      font-size:14px;
-    }
+    .player{border:1px solid var(--border);background:var(--panel-2);color:var(--text);border-radius:999px;padding:10px 14px;cursor:pointer;transition:.18s ease;user-select:none;font-size:14px}
     .player:hover{transform:translateY(-1px)}
-    .player.active{
-      background:linear-gradient(135deg, var(--accent), #22c55e);
-      color:#04110c;
-      border-color:transparent;
-      font-weight:700;
-    }
+    .player.active{background:linear-gradient(135deg,var(--accent),#22c55e);color:#04110c;border-color:transparent;font-weight:700}
     .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-    button{
-      border:0;border-radius:14px;padding:12px 16px;font-size:15px;font-weight:700;cursor:pointer;transition:.18s ease;
-    }
+    button{border:0;border-radius:14px;padding:12px 16px;font-size:15px;font-weight:700;cursor:pointer;transition:.18s ease}
     button:hover{transform:translateY(-1px)}
     .btn-primary{background:linear-gradient(135deg,var(--accent),#22c55e);color:#04110c}
     .btn-secondary{background:#22304a;color:var(--text);border:1px solid var(--border)}
@@ -94,25 +42,13 @@
     th, td{text-align:left;padding:10px;border-bottom:1px solid var(--border)}
     th{color:var(--muted);font-weight:700}
     .hint{margin-top:10px;color:var(--muted);font-size:13px}
-    .badge{
-      display:inline-block;background:#16243d;border:1px solid #294067;padding:6px 10px;border-radius:999px;font-size:12px;color:#cfe0ff
-    }
+    .badge{display:inline-block;background:#16243d;border:1px solid #294067;padding:6px 10px;border-radius:999px;font-size:12px;color:#cfe0ff}
     .footer-note{margin-top:10px;font-size:13px;color:var(--muted)}
     .flight-meta{font-size:13px;color:var(--muted);margin-top:6px}
     .status{margin-top:12px;color:var(--muted);font-size:13px}
-    .ok{color:#86efac}
-    .warn{color:#fcd34d}
-    .err{color:#fca5a5}
-    @media (max-width: 900px){
-      .hero{grid-template-columns:1fr}
-      .grid{grid-template-columns:1fr}
-      .hero-right{grid-template-columns:1fr 1fr}
-    }
-    @media (max-width: 560px){
-      .wrap{padding:14px}
-      .title{font-size:26px}
-      .hero-right{grid-template-columns:1fr}
-    }
+    .ok{color:#86efac}.warn{color:#fcd34d}.err{color:#fca5a5}
+    @media (max-width:900px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.hero-right{grid-template-columns:1fr 1fr}}
+    @media (max-width:560px){.wrap{padding:14px}.title{font-size:26px}.hero-right{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -150,9 +86,7 @@
       <section class="card">
         <h2>Flight-Statistik</h2>
         <table>
-          <thead>
-            <tr><th>Flight</th><th>Wie oft gespielt</th></tr>
-          </thead>
+          <thead><tr><th>Flight</th><th>Wie oft gespielt</th></tr></thead>
           <tbody id="statsBody"></tbody>
         </table>
         <div class="hint">Gezählt wird die komplette Flight-Zusammensetzung, nicht einzelne Zweierpaarungen.</div>
@@ -161,22 +95,13 @@
 
     <section class="card" style="margin-top:20px">
       <h2>Flights</h2>
-      <div id="output" class="output-grid">
-        <div class="muted">Noch keine Runde erzeugt.</div>
-      </div>
+      <div id="output" class="output-grid"><div class="muted">Noch keine Runde erzeugt.</div></div>
     </section>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getFirestore,
-      collection,
-      getDocs,
-      addDoc,
-      deleteDoc,
-      doc
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, addDoc, query, orderBy, serverTimestamp, writeBatch, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAODae-cw89uBzGlYbJJH_xmxs_gqYGl-k",
@@ -190,21 +115,13 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const roundsRef = collection(db, "rounds");
 
-    const allPlayers = [
-      "Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider",
-      "Jörg","Martin","Carsten","Felix","Carl","Sascha"
-    ];
-
+    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha"];
     let selected = new Set();
     let rounds = [];
     let flightHistory = {};
 
-    document.getElementById("today").innerText =
-      new Date().toLocaleDateString("de-DE", {
-        weekday:"long", year:"numeric", month:"long", day:"numeric"
-      });
+    document.getElementById("today").innerText = new Date().toLocaleDateString("de-DE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 
     function setCloudStatus(text, cls=""){
       const el = document.getElementById("cloudStatus");
@@ -214,6 +131,14 @@
 
     function normalizeFlight(group){
       return [...group].sort((a,b) => a.localeCompare(b, "de")).join(" | ");
+    }
+
+    function dbGroupsToArrays(groups){
+      return (groups || []).map(g => Array.isArray(g.players) ? g.players : []).filter(g => g.length > 0);
+    }
+
+    function arraysToDbGroups(groups){
+      return groups.map(group => ({ players: group }));
     }
 
     function rebuildHistoryFromRounds(){
@@ -238,19 +163,13 @@
       if(count === 9) return [4,3,2];
       if(count === 10) return [4,3,3];
       if(count === 11) return [4,4,3];
-
       const layout = [];
       let remaining = count;
-      while(remaining > 11){
-        layout.push(4);
-        remaining -= 4;
-      }
+      while(remaining > 11){ layout.push(4); remaining -= 4; }
       return layout.concat(getPreferredLayout(remaining));
     }
 
-    function formatLayout(layout){
-      return layout.length ? layout.join(" + ") : "–";
-    }
+    function formatLayout(layout){ return layout.length ? layout.join(" + ") : "–"; }
 
     function updateTopStats(){
       const currentLayout = getPreferredLayout(selected.size);
@@ -276,43 +195,25 @@
 
     function renderStats(){
       const tbody = document.getElementById("statsBody");
-      const entries = Object.entries(flightHistory).sort((a,b) => {
-        if (b[1] !== a[1]) return b[1] - a[1];
-        return a[0].localeCompare(b[0], "de");
-      });
-
+      const entries = Object.entries(flightHistory).sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0], "de"));
       if(entries.length === 0){
         tbody.innerHTML = '<tr><td colspan="2" class="muted">Noch keine Daten vorhanden.</td></tr>';
         return;
       }
-
-      tbody.innerHTML = entries.map(([flight, count]) => `
-        <tr><td>${flight}</td><td>${count}x</td></tr>
-      `).join("");
+      tbody.innerHTML = entries.map(([flight, count]) => `<tr><td>${flight}</td><td>${count}x</td></tr>`).join("");
     }
 
     function togglePlayer(name){
-      if(selected.has(name)) selected.delete(name);
-      else selected.add(name);
+      if(selected.has(name)) selected.delete(name); else selected.add(name);
       renderPlayers();
     }
 
-    function selectAll(){
-      selected = new Set(allPlayers);
-      renderPlayers();
-    }
-
-    function clearSelection(){
-      selected.clear();
-      renderPlayers();
-    }
+    function selectAll(){ selected = new Set(allPlayers); renderPlayers(); }
+    function clearSelection(){ selected.clear(); renderPlayers(); }
 
     function score(groups){
       let s = 0;
-      groups.forEach(group => {
-        const key = normalizeFlight(group);
-        s += flightHistory[key] || 0;
-      });
+      groups.forEach(group => { s += flightHistory[normalizeFlight(group)] || 0; });
       return s;
     }
 
@@ -328,18 +229,12 @@
 
     function createGroups(players){
       const layout = getPreferredLayout(players.length);
-      let bestGroups = null;
-      let bestScore = Infinity;
-
+      let bestGroups = null, bestScore = Infinity;
       for(let attempt=0; attempt<6000; attempt++){
         const shuffled = [...players].sort(() => Math.random() - 0.5);
         const groups = buildGroupsByLayout(shuffled, layout);
         const currentScore = score(groups);
-
-        if(currentScore < bestScore){
-          bestScore = currentScore;
-          bestGroups = groups;
-        }
+        if(currentScore < bestScore){ bestScore = currentScore; bestGroups = groups; }
       }
       return bestGroups;
     }
@@ -350,13 +245,10 @@
         output.innerHTML = '<div class="muted">Keine Flights vorhanden.</div>';
         return;
       }
-
       output.innerHTML = groups.map((group, idx) => `
         <div class="flight">
           <h3>Flight ${idx + 1}</h3>
-          <div class="chips">
-            ${group.map(name => `<div class="chip">${name}</div>`).join("")}
-          </div>
+          <div class="chips">${group.map(name => `<div class="chip">${name}</div>`).join("")}</div>
           <div class="flight-meta">Diese Konstellation wurde bisher ${flightHistory[normalizeFlight(group)] || 0}x gespielt.</div>
         </div>
       `).join("");
@@ -365,24 +257,26 @@
     async function loadRounds(){
       setCloudStatus("Lade Cloud-Daten …");
       try{
-        const snap = await getDocs(roundsRef);
-        rounds = snap.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .filter(r => Array.isArray(r.groups))
-          .sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+        const q = query(collection(db, "rounds"), orderBy("createdAt", "asc"));
+        const snap = await getDocs(q);
+        rounds = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            date: data.date || "",
+            createdAt: data.createdAt || null,
+            groups: dbGroupsToArrays(data.groups)
+          };
+        }).filter(r => r.groups.length > 0);
 
         rebuildHistoryFromRounds();
         renderStats();
         updateTopStats();
-
-        if(rounds.length > 0){
-          renderRound(rounds[rounds.length - 1].groups);
-        }
-
+        if(rounds.length > 0) renderRound(rounds[rounds.length - 1].groups);
         setCloudStatus("Cloud verbunden.", "ok");
       }catch(err){
-        console.error(err);
-        setCloudStatus("Cloud-Fehler: " + err.message, "err");
+        console.error("loadRounds", err);
+        setCloudStatus("Cloud-Fehler. Prüfe Firestore.", "err");
       }
     }
 
@@ -394,26 +288,30 @@
       }
 
       const groups = createGroups(players);
-      const round = {
+      const roundForDb = {
         date: new Date().toLocaleDateString("de-DE"),
-        createdAtMs: Date.now(),
-        groups
+        createdAt: serverTimestamp(),
+        groups: arraysToDbGroups(groups)
       };
 
       try{
         setCloudStatus("Speichere Runde in der Cloud …", "warn");
-        const ref = await addDoc(roundsRef, round);
-        rounds.push({ id: ref.id, ...round });
-        rounds.sort((a,b) => (a.createdAtMs || 0) - (b.createdAtMs || 0));
+        const ref = await addDoc(collection(db, "rounds"), roundForDb);
+        rounds.push({
+          id: ref.id,
+          date: roundForDb.date,
+          createdAt: new Date().toISOString(),
+          groups
+        });
         rebuildHistoryFromRounds();
         renderStats();
         updateTopStats();
         renderRound(groups);
         setCloudStatus("Runde gespeichert.", "ok");
       }catch(err){
-        console.error(err);
-        setCloudStatus("Speichern fehlgeschlagen: " + err.message, "err");
-        alert("Speichern fehlgeschlagen: " + err.message);
+        console.error("generateRound", err);
+        alert("Speichern fehlgeschlagen. Details in der Browser-Konsole.");
+        setCloudStatus("Speichern fehlgeschlagen.", "err");
       }
     }
 
@@ -429,11 +327,10 @@
       if(!confirm("Wirklich alle Cloud-Daten löschen?")) return;
       try{
         setCloudStatus("Lösche Cloud-Daten …", "warn");
-        const snap = await getDocs(roundsRef);
-        for(const d of snap.docs){
-          await deleteDoc(doc(db, "rounds", d.id));
-        }
-
+        const snap = await getDocs(collection(db, "rounds"));
+        const batch = writeBatch(db);
+        snap.forEach(d => batch.delete(doc(db, "rounds", d.id)));
+        await batch.commit();
         rounds = [];
         flightHistory = {};
         selected.clear();
@@ -443,9 +340,9 @@
         updateTopStats();
         setCloudStatus("Alle Cloud-Daten wurden gelöscht.", "ok");
       }catch(err){
-        console.error(err);
-        setCloudStatus("Löschen fehlgeschlagen: " + err.message, "err");
-        alert("Löschen fehlgeschlagen: " + err.message);
+        console.error("resetAll", err);
+        alert("Löschen fehlgeschlagen. Details in der Browser-Konsole.");
+        setCloudStatus("Löschen fehlgeschlagen.", "err");
       }
     }
 
