@@ -731,30 +731,7 @@
     alert("Löschen fehlgeschlagen.");
   }
 }
-      if(!confirm("Wirklich alle Cloud-Daten löschen?")) return;
-      try{
-        setCloudStatus("Lösche Cloud-Daten …", "warn");
-        const snap = await getDocs(collection(db, "rounds"));
-        const batch = writeBatch(db);
-        snap.forEach(d => batch.delete(doc(db, "rounds", d.id)));
-        await batch.commit();
-
-        rounds = [];
-        flightHistory = {};
-        playerStats = {};
-        partnerStats = {};
-        selected.clear();
-        renderPlayers();
-        renderAllStats();
-        renderRound([]);
-        renderWeekPlan([]);
-        setCloudStatus("Alle Cloud-Daten wurden gelöscht.", "ok");
-      }catch(err){
-        console.error("resetAll", err);
-        alert("Löschen fehlgeschlagen. Details in der Browser-Konsole.");
-        setCloudStatus("Löschen fehlgeschlagen.", "err");
-      }
-    }
+      
 
     function cssSafe(value){
       return value.replaceAll(" ", "_").replaceAll(".", "_").replaceAll("ä","ae").replaceAll("ö","oe").replaceAll("ü","ue").replaceAll("ß","ss");
