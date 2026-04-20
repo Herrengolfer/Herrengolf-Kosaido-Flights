@@ -122,7 +122,7 @@
           </thead>
           <tbody id="rankingBody"></tbody>
         </table>
-        <div class="hint">Wertung aktuell: 1 Flight-Sieg = 3 Punkte.</div>
+        <div class="hint">Wertung aktuell: 1 Flight-Sieg = 1 Punkt. Bei 2 Flights gibt es also 2 Gewinner mit je 1 Punkt.</div>
       </section>
 
       <section class="card">
@@ -233,7 +233,7 @@
           const winner = round.results?.[idx]?.winner || "";
           if(winner && group.includes(winner)){
             pStats[winner].wins += 1;
-            pStats[winner].points += 3;
+            pStats[winner].points += 1;
           }
         });
       });
