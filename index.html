@@ -264,6 +264,7 @@
     let selectedHistoryPlayer = "";
     let winsLossesChart = null;
     let ladiesChart = null;
+    let currentPlannedGroups = null;
 
     document.getElementById("today").innerText = new Date().toLocaleDateString("de-DE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 
@@ -656,11 +657,23 @@
 
     function togglePlayer(name){
       if(selected.has(name)) selected.delete(name); else selected.add(name);
+      currentPlannedGroups = null;
+      document.getElementById("weekPlanOutput").innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
       renderPlayers();
     }
 
-    function selectAll(){ selected = new Set(allPlayers); renderPlayers(); }
-    function clearSelection(){ selected.clear(); renderPlayers(); }
+    function selectAll(){
+      selected = new Set(allPlayers);
+      currentPlannedGroups = null;
+      document.getElementById("weekPlanOutput").innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
+      renderPlayers();
+    }
+    function clearSelection(){
+      selected.clear();
+      currentPlannedGroups = null;
+      document.getElementById("weekPlanOutput").innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
+      renderPlayers();
+    }
 
     function score(groups){
       let s = 0;
@@ -885,7 +898,18 @@
       const players = Array.from(selected);
       if(players.length < 3){ alert("Bitte mindestens 3 Spieler auswählen."); return; }
 
-      const groups = createGroups(players);
+      let groups = null;
+      const playerKey = [...players].sort((a,b) => a.localeCompare(b, "de")).join("|");
+      const plannedKey = currentPlannedGroups
+        ? currentPlannedGroups.flat().sort((a,b) => a.localeCompare(b, "de")).join("|")
+        : "";
+
+      if(currentPlannedGroups && plannedKey === playerKey){
+        groups = currentPlannedGroups;
+      } else {
+        groups = createGroups(players);
+      }
+
       const initialResults = emptyResults(groups);
 
       const roundForDb = {
@@ -907,6 +931,8 @@
           results: initialResults
         });
 
+        currentPlannedGroups = null;
+        document.getElementById("weekPlanOutput").innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
         renderRound(groups, ref.id, initialResults);
         setCloudStatus("Runde gespeichert.", "ok");
       }catch(err){
@@ -925,7 +951,13 @@
     function createWeekPlan(){
       const players = Array.from(selected);
       if(players.length < 3){ alert("Bitte mindestens 3 Spieler auswählen."); return; }
-      renderWeekPlan(suggestWeekPlan(players));
+      currentPlannedGroups = createGroups(players);
+      renderWeekPlan(
+        currentPlannedGroups.map(group => ({
+          players: group,
+          avgHcp: groupHandicapAverage(group)
+        }))
+      );
     }
 
     async function resetAll(){
