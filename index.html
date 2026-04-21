@@ -135,7 +135,53 @@
     function createGroups(players){ const layout=getPreferredLayout(players.length); let bestGroups=null,bestScore=Infinity; for(let attempt=0;attempt<7000;attempt++){ const shuffled=[...players].sort(()=>Math.random()-0.5); const groups=buildGroupsByLayout(shuffled,layout); const currentScore=score(groups); if(currentScore<bestScore){ bestScore=currentScore; bestGroups=groups; } } return bestGroups; }
     function suggestWeekPlan(players){ return createGroups(players).map(group=>({players:group,avgHcp:groupHandicapAverage(group)})); }
     function renderWeekPlan(plan){ const box=document.getElementById("weekPlanOutput"); if(!plan||plan.length===0){ box.innerHTML='<div class="muted">Noch kein Spielplan erstellt.</div>'; return; } box.innerHTML=plan.map((flight,idx)=>`<div class="flight"><h3>Vorschlag ${idx+1}</h3><div class="chips">${flight.players.map(name=>`<div class="chip">${name}</div>`).join('')}</div><div class="flight-meta">Ø Handicap: ${flight.avgHcp===null?'offen':flight.avgHcp.toFixed(1)}</div></div>`).join(''); }
-    async function saveFlightResult(roundId, flightIndex){ const round=rounds.find(r=>r.id===roundId); if(!round) return; const group=round.groups[flightIndex]||[]; const winner=document.getElementById(`winner-${roundId}-${flightIndex}`).value; const loser=document.getElementById(`loser-${roundId}-${flightIndex}`).value; const ladyNodes=document.querySelectorAll(`input[name="ladies-${roundId}-${flightIndex}"]:checked`); const ladies=[...ladyNodes].map(node=>node.value); if(winner&&!group.includes(winner)){ alert("Gewinner muss in diesem Flight sein."); return; } if(loser&&!group.includes(loser)){ alert("Verlierer muss in diesem Flight sein."); return; } if(winner&&loser&&winner===loser){ alert("Gewinner und Verlierer dürfen nicht identisch sein."); return; } const nextResults=normalizeResults(round.results,round.groups); nextResults[flightIndex]={winner,loser,ladies}; try{ setCloudStatus("Speichere Ergebnis …","warn"); await updateDoc(doc(db,"rounds",roundId),{results:nextResults}); round.results=nextResults; rebuildAllStats(); renderAllStats(); renderRound(round.groups,round.id,round.results); setCloudStatus("Ergebnis gespeichert.","ok"); }catch(err){ console.error("saveFlightResult",err); alert("Ergebnis konnte nicht gespeichert werden."); setCloudStatus("Ergebnis speichern fehlgeschlagen.","err"); } }
+    async function saveFlightResult(roundId, flightIndex){
+  const adminCode = prompt("Admin-Code für Ergebnis speichern eingeben:");
+
+  if(adminCode !== "Kosaido"){
+    alert("Kein Zugriff!");
+    return;
+  }
+
+  const round = rounds.find(r => r.id === roundId);
+  if(!round) return;
+
+  const group = round.groups[flightIndex] || [];
+  const winner = document.getElementById(`winner-${roundId}-${flightIndex}`).value;
+  const loser = document.getElementById(`loser-${roundId}-${flightIndex}`).value;
+  const ladyNodes = document.querySelectorAll(`input[name="ladies-${roundId}-${flightIndex}"]:checked`);
+  const ladies = [...ladyNodes].map(node => node.value);
+
+  if(winner && !group.includes(winner)){
+    alert("Gewinner muss in diesem Flight sein.");
+    return;
+  }
+  if(loser && !group.includes(loser)){
+    alert("Verlierer muss in diesem Flight sein.");
+    return;
+  }
+  if(winner && loser && winner === loser){
+    alert("Gewinner und Verlierer dürfen nicht identisch sein.");
+    return;
+  }
+
+  const nextResults = normalizeResults(round.results, round.groups);
+  nextResults[flightIndex] = { winner, loser, ladies };
+
+  try{
+    setCloudStatus("Speichere Ergebnis …", "warn");
+    await updateDoc(doc(db, "rounds", roundId), { results: nextResults });
+    round.results = nextResults;
+    rebuildAllStats();
+    renderAllStats();
+    renderRound(round.groups, round.id, round.results);
+    setCloudStatus("Ergebnis gespeichert.", "ok");
+  }catch(err){
+    console.error("saveFlightResult", err);
+    alert("Ergebnis konnte nicht gespeichert werden.");
+    setCloudStatus("Ergebnis speichern fehlgeschlagen.", "err");
+  }
+} const round=rounds.find(r=>r.id===roundId); if(!round) return; const group=round.groups[flightIndex]||[]; const winner=document.getElementById(`winner-${roundId}-${flightIndex}`).value; const loser=document.getElementById(`loser-${roundId}-${flightIndex}`).value; const ladyNodes=document.querySelectorAll(`input[name="ladies-${roundId}-${flightIndex}"]:checked`); const ladies=[...ladyNodes].map(node=>node.value); if(winner&&!group.includes(winner)){ alert("Gewinner muss in diesem Flight sein."); return; } if(loser&&!group.includes(loser)){ alert("Verlierer muss in diesem Flight sein."); return; } if(winner&&loser&&winner===loser){ alert("Gewinner und Verlierer dürfen nicht identisch sein."); return; } const nextResults=normalizeResults(round.results,round.groups); nextResults[flightIndex]={winner,loser,ladies}; try{ setCloudStatus("Speichere Ergebnis …","warn"); await updateDoc(doc(db,"rounds",roundId),{results:nextResults}); round.results=nextResults; rebuildAllStats(); renderAllStats(); renderRound(round.groups,round.id,round.results); setCloudStatus("Ergebnis gespeichert.","ok"); }catch(err){ console.error("saveFlightResult",err); alert("Ergebnis konnte nicht gespeichert werden."); setCloudStatus("Ergebnis speichern fehlgeschlagen.","err"); } }
     function renderRound(groups,roundId=null,results=[]){ const output=document.getElementById("output"); if(!groups||groups.length===0){ output.innerHTML='<div class="muted">Keine Flights vorhanden.</div>'; return; } output.innerHTML=groups.map((group,idx)=>{ const result=results[idx]||{winner:"",loser:"",ladies:[]}; const avg=groupHandicapAverage(group); const winnerOptions=['<option value="">Gewinner wählen</option>'].concat(group.map(name=>`<option value="${name}" ${result.winner===name?'selected':''}>${name}</option>`)).join(""); const loserOptions=['<option value="">Verlierer wählen</option>'].concat(group.map(name=>`<option value="${name}" ${result.loser===name?'selected':''}>${name}</option>`)).join(""); const ladyChecks=group.map(name=>`<label class="check-item"><input type="checkbox" name="ladies-${roundId}-${idx}" value="${name}" ${result.ladies.includes(name)?'checked':''}><span>${name}</span></label>`).join(""); return `<div class="flight"><h3>Flight ${idx+1}</h3><div class="chips">${group.map(name=>`<div class="chip">${name}</div>`).join("")}</div><div class="flight-meta">Diese Konstellation wurde bisher ${flightHistory[normalizeFlight(group)]||0}x gespielt.</div><div class="flight-meta">Ø Handicap: ${avg===null?'offen':avg.toFixed(1)}</div>${roundId?`<div class="result-grid"><select id="winner-${roundId}-${idx}">${winnerOptions}</select><select id="loser-${roundId}-${idx}">${loserOptions}</select></div><div class="checkbox-grid">${ladyChecks}</div><div class="winner-box"><div class="hint" style="margin:0">Mehrere „Gespielte Ladys“ pro Flight möglich</div><button class="btn-gold" data-round="${roundId}" data-flight="${idx}">💾 Ergebnis speichern</button></div>${result.winner?`<div class="winner-tag">Gespeicherter Sieger: ${result.winner}</div>`:''}${result.loser?`<div class="loser-tag">Gespeicherter Verlierer: ${result.loser}</div>`:''}${result.ladies.length?`<div class="lady-tag">Gespielte Ladys: ${result.ladies.join(", ")}</div>`:''}`:''}</div>`; }).join(""); output.querySelectorAll(".btn-gold").forEach(btn=>btn.addEventListener("click",()=>{ const roundId=btn.getAttribute("data-round"); const flightIndex=Number(btn.getAttribute("data-flight")); saveFlightResult(roundId,flightIndex);})); }
     async function loadHandicaps(){ try{ const snap=await getDoc(doc(db,"meta","handicaps")); if(snap.exists()){ handicaps={...defaultHandicaps,...(snap.data().values||{})}; } else { handicaps={...defaultHandicaps}; await setDoc(doc(db,"meta","handicaps"),{values:handicaps}); } }catch(err){ console.error("loadHandicaps",err); handicaps={...defaultHandicaps}; } renderPlayers(); renderHandicaps(); }
     async function saveHandicap(player){ const input=document.getElementById(`hcp-${cssSafe(player)}`); const raw=input.value.trim(); let value=null; if(raw!==""){ value=Number(raw.replace(",",".")); if(Number.isNaN(value)){ alert("Bitte eine gültige Zahl eingeben."); return; } } if(value===null) delete handicaps[player]; else handicaps[player]=value; try{ setCloudStatus("Speichere Handicap …","warn"); await setDoc(doc(db,"meta","handicaps"),{values:handicaps}); renderPlayers(); renderHandicaps(); setCloudStatus("Handicap gespeichert.","ok"); }catch(err){ console.error("saveHandicap",err); alert("Handicap konnte nicht gespeichert werden."); setCloudStatus("Handicap speichern fehlgeschlagen.","err"); } }
