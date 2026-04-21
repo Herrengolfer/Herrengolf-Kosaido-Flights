@@ -64,11 +64,12 @@
     .checkbox-grid{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:8px;margin-top:10px}
     .check-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:#0f172a}
     .check-item input{width:auto}
+    .filters{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:12px}
     @media (max-width:980px){
       .hero{grid-template-columns:1fr}
       .grid{grid-template-columns:1fr}
       .hero-right{grid-template-columns:1fr 1fr}
-      .result-grid{grid-template-columns:1fr}
+      .result-grid,.filters{grid-template-columns:1fr}
     }
     @media (max-width:560px){
       .wrap{padding:14px}
@@ -120,7 +121,6 @@
           <thead><tr><th>Spieler</th><th>HCP</th><th>Aktion</th></tr></thead>
           <tbody id="handicapBody"></tbody>
         </table>
-        <div class="hint">Vorbelegte Handicaps können direkt in der App angepasst werden.</div>
       </section>
     </div>
 
@@ -131,7 +131,6 @@
           <thead><tr><th>Platz</th><th>Spieler</th><th>Flight-Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr></thead>
           <tbody id="rankingBody"></tbody>
         </table>
-        <div class="hint">1 Flight-Sieg = 1 Sieg. Pro Flight wird zusätzlich genau 1 Verlierer gespeichert.</div>
       </section>
 
       <section class="card">
@@ -155,7 +154,6 @@
       <section class="card">
         <h2>Wochen-Spielplan</h2>
         <div id="weekPlanOutput" class="weekplan"><div class="muted">Noch kein Spielplan erstellt.</div></div>
-        <div class="hint">Der Vorschlag berücksichtigt bekannte Wiederholungen und Handicap-Ausgleich.</div>
       </section>
     </div>
 
@@ -180,6 +178,26 @@
     <section class="card" style="margin-top:20px">
       <h2>Flights & Ergebnisse</h2>
       <div id="output" class="output-grid"><div class="muted">Noch keine Runde erzeugt.</div></div>
+    </section>
+
+    <section class="card" style="margin-top:20px">
+      <h2>Ergebnisse Historie</h2>
+      <table>
+        <thead><tr><th>Datum</th><th>Flight</th><th>Gewinner</th><th>Verlierer</th><th>Ladys</th></tr></thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </section>
+
+    <section class="card" style="margin-top:20px">
+      <h2>Verlauf pro Spieler</h2>
+      <div class="filters">
+        <select id="historyPlayerFilter"></select>
+        <button class="btn-secondary" id="clearHistoryFilterBtn">Filter zurücksetzen</button>
+      </div>
+      <table>
+        <thead><tr><th>Datum</th><th>Flight</th><th>Rolle</th><th>Ladys</th></tr></thead>
+        <tbody id="playerHistoryBody"></tbody>
+      </table>
     </section>
   </div>
 
@@ -212,6 +230,7 @@
     let playerStats = {};
     let partnerStats = {};
     let handicaps = {};
+    let selectedHistoryPlayer = "";
 
     document.getElementById("today").innerText = new Date().toLocaleDateString("de-DE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 
@@ -458,18 +477,84 @@
       `).join("");
     }
 
+    function renderHistory(){
+      const tbody = document.getElementById("historyBody");
+      const rows = [];
+      rounds.forEach(round => {
+        const date = round.date || "-";
+        (round.groups || []).forEach((group, idx) => {
+          const result = round.results?.[idx] || {};
+          rows.push(`
+            <tr>
+              <td>${date}</td>
+              <td>${group.join(", ")}</td>
+              <td>${result.winner || "-"}</td>
+              <td>${result.loser || "-"}</td>
+              <td>${(result.ladies || []).join(", ") || "-"}</td>
+            </tr>
+          `);
+        });
+      });
+      if(rows.length === 0){
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine Daten vorhanden.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.reverse().join("");
+    }
+
+    function renderHistoryFilter(){
+      const select = document.getElementById("historyPlayerFilter");
+      select.innerHTML = ['<option value="">Alle Spieler</option>']
+        .concat(allPlayers.map(name => `<option value="${name}" ${selectedHistoryPlayer===name?'selected':''}>${name}</option>`))
+        .join("");
+    }
+
+    function renderPlayerHistory(){
+      const tbody = document.getElementById("playerHistoryBody");
+      const rows = [];
+      rounds.forEach(round => {
+        const date = round.date || "-";
+        (round.groups || []).forEach((group, idx) => {
+          const result = round.results?.[idx] || {};
+          group.forEach(player => {
+            if(selectedHistoryPlayer && player !== selectedHistoryPlayer) return;
+            const roles = [];
+            if(result.winner === player) roles.push("Gewinner");
+            if(result.loser === player) roles.push("Verlierer");
+            if((result.ladies || []).includes(player)) roles.push("Gespielte Lady");
+            if(roles.length === 0) roles.push("Mitgespielt");
+            rows.push(`
+              <tr>
+                <td>${date}</td>
+                <td>${group.join(", ")}</td>
+                <td>${player}: ${roles.join(", ")}</td>
+                <td>${(result.ladies || []).includes(player) ? "Ja" : "-"}</td>
+              </tr>
+            `);
+          });
+        });
+      });
+      if(rows.length === 0){
+        tbody.innerHTML = '<tr><td colspan="4" class="muted">Noch keine Daten vorhanden.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.reverse().join("");
+    }
+
     function renderAllStats(){
       renderFlightStats();
       renderRanking();
       renderPlayerStats();
       renderLadyStats();
       renderMostLady();
+      renderHistory();
+      renderHistoryFilter();
+      renderPlayerHistory();
       updateTopStats();
     }
 
     function togglePlayer(name){
-      if(selected.has(name)) selected.delete(name);
-      else selected.add(name);
+      if(selected.has(name)) selected.delete(name); else selected.add(name);
       renderPlayers();
     }
 
@@ -777,6 +862,15 @@
     document.getElementById("allBtn").addEventListener("click", selectAll);
     document.getElementById("clearBtn").addEventListener("click", clearSelection);
     document.getElementById("resetBtn").addEventListener("click", resetAll);
+    document.getElementById("historyPlayerFilter").addEventListener("change", (e) => {
+      selectedHistoryPlayer = e.target.value;
+      renderPlayerHistory();
+    });
+    document.getElementById("clearHistoryFilterBtn").addEventListener("click", () => {
+      selectedHistoryPlayer = "";
+      renderHistoryFilter();
+      renderPlayerHistory();
+    });
 
     await loadHandicaps();
     renderAllStats();
