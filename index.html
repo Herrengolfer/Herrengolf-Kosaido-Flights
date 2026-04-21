@@ -104,22 +104,43 @@
     </section>
 
     <div class="grid">
-      <section class="card">
-        <h2>Spieler auswählen</h2>
-        <div class="players" id="players"></div>
-        <div class="toolbar">
-          <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
-          <button class="btn-secondary" id="weekPlanBtn">📅 Wochen-Spielplan</button>
-          <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
-          <button class="btn-secondary" id="allBtn">Alle auswählen</button>
-          <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
-          <button class="btn-danger" id="resetBtn">♻️ Cloud-Daten löschen</button>
-        </div>
-        <div class="hint">Die Flight-Erstellung minimiert Wiederholungen und berücksichtigt zusätzlich die Handicap-Balance innerhalb der Woche.</div>
-      </section>
+  <!-- 🔵 LINKS: Spieler -->
+  <section class="card">
+    <h2>Spieler auswählen</h2>
+    <div class="players" id="players"></div>
 
-      <section class="card">
-        <h2>Ranking</h2>
+    <div class="toolbar">
+      <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
+      <button class="btn-secondary" id="weekPlanBtn">📅 Wochen-Spielplan</button>
+      <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
+      <button class="btn-secondary" id="allBtn">Alle auswählen</button>
+      <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
+      <button class="btn-danger" id="resetBtn">♻️ Cloud-Daten löschen</button>
+    </div>
+
+    <div class="hint">
+      Die Flight-Erstellung minimiert Wiederholungen und berücksichtigt zusätzlich die Handicap-Balance innerhalb der Woche.
+    </div>
+  </section>
+
+  <!-- 🟢 RECHTS: Wochenplan -->
+  <section class="card">
+    <h2>📅 Wochen-Spielplan</h2>
+
+    <div id="weekPlanOutput" class="weekplan">
+      <div class="muted">Noch kein Spielplan erstellt.</div>
+    </div>
+
+    <div class="hint">
+      Der Vorschlag berücksichtigt Wiederholungen und Handicap-Ausgleich.
+    </div>
+  </section>
+</div>
+
+<!-- 🔽 DANACH dein Ranking wieder -->
+<div class="grid" style="margin-top:20px">
+  <section class="card">
+    <h2>Ranking</h2>
         <table>
           <thead><tr><th>Platz</th><th>Spieler</th><th>Flight-Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr></thead>
           <tbody id="rankingBody"></tbody>
