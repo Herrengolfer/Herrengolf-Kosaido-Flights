@@ -22,6 +22,7 @@
     .stat .k{font-size:12px;color:var(--muted);margin-bottom:8px}
     .stat .v{font-size:26px;font-weight:800}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+    .stack{display:grid;gap:20px}
     .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
     .card h2{margin:0 0 14px;font-size:18px}
     .players{display:flex;flex-wrap:wrap;gap:10px}
@@ -97,55 +98,49 @@
       </div>
       <div class="hero-right">
         <div class="stat"><div class="k">Ausgewählte Spieler</div><div class="v" id="countSelected">0</div></div>
-        <div class="stat"><div class="k">Cloud-Runden</div><div class="v" id="countRounds">0</div></div>
-        <div class="stat"><div class="k">Einzigartige Flights</div><div class="v" id="countFlights">0</div></div>
+        <div class="stat"><div class="k">Gewertete Runden</div><div class="v" id="countRounds">0</div></div>
+        <div class="stat"><div class="k">Gewertete Flights</div><div class="v" id="countFlights">0</div></div>
         <div class="stat"><div class="k">Aufteilung</div><div class="v" style="font-size:16px;line-height:1.3" id="layoutInfo">–</div></div>
       </div>
     </section>
 
     <div class="grid">
-  <!-- 🔵 LINKS: Spieler -->
-  <section class="card">
-    <h2>Spieler auswählen</h2>
-    <div class="players" id="players"></div>
+      <div class="stack">
+        <section class="card">
+          <h2>Spieler auswählen</h2>
+          <div class="players" id="players"></div>
+          <div class="toolbar">
+            <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
+            <button class="btn-secondary" id="weekPlanBtn">📅 Wochen-Spielplan</button>
+            <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
+            <button class="btn-secondary" id="allBtn">Alle auswählen</button>
+            <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
+            <button class="btn-danger" id="resetBtn">♻️ Cloud-Daten löschen</button>
+          </div>
+          <div class="hint">Die Flight-Erstellung minimiert Wiederholungen und berücksichtigt zusätzlich die Handicap-Balance innerhalb der Woche.</div>
+        </section>
 
-    <div class="toolbar">
-      <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
-      <button class="btn-secondary" id="weekPlanBtn">📅 Wochen-Spielplan</button>
-      <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
-      <button class="btn-secondary" id="allBtn">Alle auswählen</button>
-      <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
-      <button class="btn-danger" id="resetBtn">♻️ Cloud-Daten löschen</button>
-    </div>
+        <section class="card">
+          <h2>Ranking</h2>
+          <table>
+            <thead><tr><th>Platz</th><th>Spieler</th><th>Flight-Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr></thead>
+            <tbody id="rankingBody"></tbody>
+          </table>
+        </section>
+      </div>
 
-    <div class="hint">
-      Die Flight-Erstellung minimiert Wiederholungen und berücksichtigt zusätzlich die Handicap-Balance innerhalb der Woche.
-    </div>
-  </section>
+      <div class="stack">
+        <section class="card">
+          <h2>Wochen-Spielplan</h2>
+          <div id="weekPlanOutput" class="weekplan"><div class="muted">Noch kein Spielplan erstellt.</div></div>
+          <div class="hint">Der Vorschlag berücksichtigt Wiederholungen und Handicap-Ausgleich.</div>
+        </section>
 
-  <!-- 🟢 RECHTS: Wochenplan -->
-  <section class="card">
-    <h2>📅 Wochen-Spielplan</h2>
-
-    <div id="weekPlanOutput" class="weekplan">
-      <div class="muted">Noch kein Spielplan erstellt.</div>
-    </div>
-
-    <div class="hint">
-      Der Vorschlag berücksichtigt Wiederholungen und Handicap-Ausgleich.
-    </div>
-  </section>
-</div>
-
-<!-- 🔽 DANACH dein Ranking wieder -->
-<div class="grid" style="margin-top:20px">
-  <section class="card">
-    <h2>Ranking</h2>
-        <table>
-          <thead><tr><th>Platz</th><th>Spieler</th><th>Flight-Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr></thead>
-          <tbody id="rankingBody"></tbody>
-        </table>
-      </section>
+        <section class="card">
+          <h2>Flights & Ergebnisse</h2>
+          <div id="output" class="output-grid"><div class="muted">Noch keine Runde erzeugt.</div></div>
+        </section>
+      </div>
     </div>
 
     <div class="grid" style="margin-top:20px">
@@ -182,18 +177,12 @@
       <section class="card">
         <h2>Flight-Statistik</h2>
         <table>
-          <thead><tr><th>Flight</th><th>Wie oft gespielt</th></tr></thead>
+          <thead><tr><th>Flight</th><th>Wie oft gewertet</th></tr></thead>
           <tbody id="statsBody"></tbody>
         </table>
+        <div class="hint">Ein Flight zählt hier erst, wenn Gewinner und Verlierer gespeichert wurden.</div>
       </section>
 
-      <section class="card">
-        <h2>Wochen-Spielplan</h2>
-        <div id="weekPlanOutput" class="weekplan"><div class="muted">Noch kein Spielplan erstellt.</div></div>
-      </section>
-    </div>
-
-    <div class="grid" style="margin-top:20px">
       <section class="card">
         <h2>Lady-Statistik</h2>
         <table>
@@ -201,7 +190,9 @@
           <tbody id="ladyStatsBody"></tbody>
         </table>
       </section>
+    </div>
 
+    <div class="grid" style="margin-top:20px">
       <section class="card">
         <h2>Meiste Ladys insgesamt</h2>
         <table>
@@ -209,20 +200,15 @@
           <tbody id="mostLadyBody"></tbody>
         </table>
       </section>
+
+      <section class="card">
+        <h2>Ergebnisse Historie</h2>
+        <table>
+          <thead><tr><th>Datum</th><th>Flight</th><th>Gewinner</th><th>Verlierer</th><th>Ladys</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </section>
     </div>
-
-    <section class="card" style="margin-top:20px">
-      <h2>Flights & Ergebnisse</h2>
-      <div id="output" class="output-grid"><div class="muted">Noch keine Runde erzeugt.</div></div>
-    </section>
-
-    <section class="card" style="margin-top:20px">
-      <h2>Ergebnisse Historie</h2>
-      <table>
-        <thead><tr><th>Datum</th><th>Flight</th><th>Gewinner</th><th>Verlierer</th><th>Ladys</th></tr></thead>
-        <tbody id="historyBody"></tbody>
-      </table>
-    </section>
 
     <section class="card" style="margin-top:20px">
       <h2>Verlauf pro Spieler</h2>
@@ -303,6 +289,17 @@
       });
     }
 
+    function isCompleteResult(group, result){
+      return !!(
+        result &&
+        result.winner &&
+        result.loser &&
+        group.includes(result.winner) &&
+        group.includes(result.loser) &&
+        result.winner !== result.loser
+      );
+    }
+
     function handicapValue(name){
       const value = handicaps[name];
       return typeof value === "number" && !Number.isNaN(value) ? value : null;
@@ -332,6 +329,9 @@
 
       rounds.forEach(round => {
         (round.groups || []).forEach((group, idx) => {
+          const result = round.results?.[idx] || {};
+          if(!isCompleteResult(group, result)) return;
+
           const key = normalizeFlight(group);
           history[key] = (history[key] || 0) + 1;
 
@@ -345,9 +345,8 @@
             }
           }
 
-          const result = round.results?.[idx] || {};
-          if(result.winner && group.includes(result.winner)) pStats[result.winner].wins += 1;
-          if(result.loser && group.includes(result.loser)) pStats[result.loser].losses += 1;
+          pStats[result.winner].wins += 1;
+          pStats[result.loser].losses += 1;
           (result.ladies || []).forEach(name => {
             if(group.includes(name)) pStats[name].ladies += 1;
           });
@@ -388,7 +387,7 @@
     function updateTopStats(){
       const currentLayout = getPreferredLayout(selected.size);
       document.getElementById("countSelected").innerText = selected.size;
-      document.getElementById("countRounds").innerText = rounds.length;
+      document.getElementById("countRounds").innerText = Object.values(playerStats).reduce((max, s) => Math.max(max, s.rounds), 0);
       document.getElementById("countFlights").innerText = Object.keys(flightHistory).length;
       document.getElementById("layoutInfo").innerText = formatLayout(currentLayout);
     }
@@ -431,7 +430,7 @@
       const tbody = document.getElementById("statsBody");
       const entries = Object.entries(flightHistory).sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0], "de"));
       if(entries.length === 0){
-        tbody.innerHTML = '<tr><td colspan="2" class="muted">Noch keine Daten vorhanden.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="2" class="muted">Noch keine vollständigen Ergebnisse vorhanden.</td></tr>';
         return;
       }
       tbody.innerHTML = entries.map(([flight, count]) => `<tr><td>${flight}</td><td>${count}x</td></tr>`).join("");
@@ -546,6 +545,7 @@
         const date = round.date || "-";
         (round.groups || []).forEach((group, idx) => {
           const result = round.results?.[idx] || {};
+          if(!isCompleteResult(group, result)) return;
           rows.push(`
             <tr>
               <td>${date}</td>
@@ -558,7 +558,7 @@
         });
       });
       if(rows.length === 0){
-        tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine Daten vorhanden.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="muted">Noch keine vollständigen Ergebnisse vorhanden.</td></tr>';
         return;
       }
       tbody.innerHTML = rows.reverse().join("");
@@ -580,6 +580,8 @@
         const date = round.date || "-";
         (round.groups || []).forEach((group, idx) => {
           const result = round.results?.[idx] || {};
+          if(!isCompleteResult(group, result)) return;
+
           group.forEach(player => {
             if(filter && player !== filter) return;
             const roles = [];
@@ -600,7 +602,7 @@
       });
 
       if(rows.length === 0){
-        tbody.innerHTML = '<tr><td colspan="4" class="muted">Noch keine Daten vorhanden.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" class="muted">Noch keine vollständigen Ergebnisse vorhanden.</td></tr>';
         return;
       }
       tbody.innerHTML = rows.reverse().join("");
@@ -627,22 +629,13 @@
 
       winsLossesChart = new Chart(document.getElementById("winsLossesChart").getContext("2d"), {
         type: "bar",
-        data: {
-          labels,
-          datasets: [
-            { label: "Siege", data: wins },
-            { label: "Niederlagen", data: losses }
-          ]
-        },
+        data: { labels, datasets: [{ label: "Siege", data: wins }, { label: "Niederlagen", data: losses }] },
         options: commonOptions
       });
 
       ladiesChart = new Chart(document.getElementById("ladiesChart").getContext("2d"), {
         type: "bar",
-        data: {
-          labels,
-          datasets: [{ label: "Gespielte Ladys", data: ladies }]
-        },
+        data: { labels, datasets: [{ label: "Gespielte Ladys", data: ladies }] },
         options: commonOptions
       });
     }
@@ -733,9 +726,13 @@
       const ladyNodes = document.querySelectorAll(`input[name="ladies-${roundId}-${flightIndex}"]:checked`);
       const ladies = [...ladyNodes].map(node => node.value);
 
+      if(!winner || !loser){
+        alert("Bitte Gewinner und Verlierer auswählen.");
+        return;
+      }
       if(winner && !group.includes(winner)){ alert("Gewinner muss in diesem Flight sein."); return; }
       if(loser && !group.includes(loser)){ alert("Verlierer muss in diesem Flight sein."); return; }
-      if(winner && loser && winner === loser){ alert("Gewinner und Verlierer dürfen nicht identisch sein."); return; }
+      if(winner === loser){ alert("Gewinner und Verlierer dürfen nicht identisch sein."); return; }
 
       const nextResults = normalizeResults(round.results, round.groups);
       nextResults[flightIndex] = { winner, loser, ladies };
@@ -782,7 +779,7 @@
           <div class="flight">
             <h3>Flight ${idx + 1}</h3>
             <div class="chips">${group.map(name => `<div class="chip">${name}</div>`).join("")}</div>
-            <div class="flight-meta">Diese Konstellation wurde bisher ${flightHistory[normalizeFlight(group)] || 0}x gespielt.</div>
+            <div class="flight-meta">Diese Konstellation wurde bisher ${flightHistory[normalizeFlight(group)] || 0}x gewertet.</div>
             <div class="flight-meta">Ø Handicap: ${avg===null ? 'offen' : avg.toFixed(1)}</div>
             ${roundId ? `
               <div class="result-grid">
@@ -791,7 +788,7 @@
               </div>
               <div class="checkbox-grid">${ladyChecks}</div>
               <div class="winner-box">
-                <div class="hint" style="margin:0">Mehrere „Gespielte Ladys“ pro Flight möglich</div>
+                <div class="hint" style="margin:0">Statistiken zählen erst nach gespeichertem Gewinner + Verlierer</div>
                 <button class="btn-gold" data-round="${roundId}" data-flight="${idx}">💾 Ergebnis speichern</button>
               </div>
               ${result.winner ? `<div class="winner-tag">Gespeicherter Sieger: ${result.winner}</div>` : ""}
@@ -910,8 +907,6 @@
           results: initialResults
         });
 
-        rebuildAllStats();
-        renderAllStats();
         renderRound(groups, ref.id, initialResults);
         setCloudStatus("Runde gespeichert.", "ok");
       }catch(err){
