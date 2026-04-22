@@ -241,7 +241,6 @@
           <div class="players" id="players"></div>
           <div class="toolbar">
             <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
-            <button class="btn-secondary" id="weekPlanBtn">📅 Wochen-Spielplan</button>
             <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
             <button class="btn-secondary" id="allBtn">Alle auswählen</button>
             <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
@@ -379,10 +378,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi"];
+    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha"];
     const defaultHandicaps = {
       "Luci": 11.0, "Dolli": 16.7, "Carl": 10.5, "Thomas Wimmer": 19.7, "Sascha": 19.7,
-      "Martin": 18.4, "Thomas Schneider": 21.0, "Carsten": 15.7, "Dickie": 21.2, "Jörg": 25.0, "Felix": 15.2, "Adi":19.2
+      "Martin": 18.4, "Thomas Schneider": 21.0, "Carsten": 15.7, "Dickie": 21.2, "Jörg": 25.0, "Felix": 15.2
     };
 
     let selected = new Set();
@@ -523,9 +522,21 @@
       document.getElementById("layoutInfo").innerText = formatLayout(currentLayout);
     }
 
-    function resetWeekPlanView(){
-      currentPlannedGroups = null;
-      document.getElementById("weekPlanOutput").innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
+    function updateWeekPlanPreview(){
+      const players = Array.from(selected);
+      if(players.length < 3){
+        currentPlannedGroups = null;
+        document.getElementById("weekPlanOutput").innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
+        return;
+      }
+
+      currentPlannedGroups = createGroups(players);
+      renderWeekPlan(
+        currentPlannedGroups.map(group => ({
+          players: group,
+          avgHcp: groupHandicapAverage(group)
+        }))
+      );
     }
 
     function renderPlayers(){
@@ -773,19 +784,19 @@
 
     function togglePlayer(name){
       if(selected.has(name)) selected.delete(name); else selected.add(name);
-      resetWeekPlanView();
+      updateWeekPlanPreview();
       renderPlayers();
     }
 
     function selectAll(){
       selected = new Set(allPlayers);
-      resetWeekPlanView();
+      updateWeekPlanPreview();
       renderPlayers();
     }
 
     function clearSelection(){
       selected.clear();
-      resetWeekPlanView();
+      updateWeekPlanPreview();
       renderPlayers();
     }
 
@@ -806,28 +817,28 @@
       return groups;
     }
 
+    function shuffleArray(array){
+      const arr = [...array];
+      for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
     function createGroups(players){
       const layout = getPreferredLayout(players.length);
       let bestGroups = null, bestScore = Infinity;
       for(let attempt=0; attempt<7000; attempt++){
-        const shuffled = [...players].sort(() => Math.random() - 0.5);
+        const shuffled = shuffleArray(players);
         const groups = buildGroupsByLayout(shuffled, layout);
         const currentScore = score(groups);
-        if(currentScore < bestScore){ bestScore = currentScore; bestGroups = groups; }
+        if(currentScore < bestScore){
+          bestScore = currentScore;
+          bestGroups = groups.map(group => [...group]);
+        }
       }
       return bestGroups;
-    }
-
-    function createWeekPlan(){
-      const players = Array.from(selected);
-      if(players.length < 3){ alert("Bitte mindestens 3 Spieler auswählen."); return; }
-      currentPlannedGroups = createGroups(players);
-      renderWeekPlan(
-        currentPlannedGroups.map(group => ({
-          players: group,
-          avgHcp: groupHandicapAverage(group)
-        }))
-      );
     }
 
     function renderWeekPlan(plan){
@@ -1053,7 +1064,7 @@
           results: initialResults
         });
 
-        resetWeekPlanView();
+        updateWeekPlanPreview();
         renderRound(groups, ref.id, initialResults);
         setCloudStatus("Runde gespeichert.", "ok");
       }catch(err){
@@ -1092,7 +1103,7 @@
         renderPlayers();
         renderAllStats();
         renderRound([]);
-        resetWeekPlanView();
+        updateWeekPlanPreview();
         setCloudStatus("Alle Cloud-Daten wurden gelöscht.", "ok");
       }catch(err){
         console.error("resetAll", err);
@@ -1105,7 +1116,6 @@
     }
 
     document.getElementById("generateBtn").addEventListener("click", generateRound);
-    document.getElementById("weekPlanBtn").addEventListener("click", createWeekPlan);
     document.getElementById("lastBtn").addEventListener("click", showLastRound);
     document.getElementById("allBtn").addEventListener("click", selectAll);
     document.getElementById("clearBtn").addEventListener("click", clearSelection);
