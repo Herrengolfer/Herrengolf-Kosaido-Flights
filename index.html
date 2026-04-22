@@ -817,15 +817,23 @@
       }
     }
 
-    function buildGroupsByLayout(shuffledPlayers, layout){
-      const groups = [];
-      let index = 0;
-      layout.forEach(size => {
-        groups.push(shuffledPlayers.slice(index, index + size));
-        index += size;
-      });
-      return groups;
+   function buildGroupsByLayout(players, layout){
+  let remaining = [...players];
+  let groups = [];
+
+  layout.forEach(size => {
+    let group = [];
+
+    for(let i = 0; i < size; i++){
+      const idx = Math.floor(Math.random() * remaining.length);
+      group.push(remaining.splice(idx, 1)[0]);
     }
+
+    groups.push(group);
+  });
+
+  return groups;
+}
 
     function shuffleArray(array){
       const arr = [...array];
