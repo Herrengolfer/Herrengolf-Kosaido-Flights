@@ -381,7 +381,8 @@
     const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi"];
     const defaultHandicaps = {
       "Luci": 11.0, "Dolli": 16.7, "Carl": 10.5, "Thomas Wimmer": 19.7, "Sascha": 19.7,
-      "Martin": 18.4, "Thomas Schneider": 21.0, "Carsten": 15.7, "Dickie": 21.2, "Jörg": 25.0, "Felix": 15.2, "Adi": 19.2
+      "Martin": 18.4, "Thomas Schneider": 21.0, "Carsten": 15.7, "Dickie": 21.2, "Jörg": 25.0, "Felix": 15.2,
+      "Adi": 19.2
     };
 
     let selected = new Set();
@@ -802,9 +803,18 @@
 
     function score(groups){
       let s = 0;
-      groups.forEach(group => { s += flightHistory[normalizeFlight(group)] || 0; });
-      s += handicapBalancePenalty(groups) * 2;
+      groups.forEach(group => {
+        s += flightHistory[normalizeFlight(group)] || 0;
+      });
+      s += handicapBalancePenalty(groups) * 0.8;
       return s;
+    }
+
+    function shuffle(array){
+      for(let i = array.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
     }
 
     function buildGroupsByLayout(shuffledPlayers, layout){
@@ -1056,32 +1066,17 @@
         setCloudStatus("Speichere Runde in der Cloud …", "warn");
         const ref = await addDoc(collection(db, "rounds"), roundForDb);
 
-rounds.push({
-  id: ref.id,
-  date: roundForDb.date,
-  createdAt: new Date().toISOString(),
-  groups,
-  results: initialResults
-});
+        rounds.push({
+          id: ref.id,
+          date: roundForDb.date,
+          createdAt: new Date().toISOString(),
+          groups,
+          results: initialResults
+        });
 
-renderRound(groups, ref.id, initialResults);
-setCloudStatus("Runde gespeichert.", "ok");
-
-// Direkt neuen Wochen-Spielplan für dieselben ausgewählten Spieler erzeugen
-const stillSelectedPlayers = Array.from(selected);
-
-if(stillSelectedPlayers.length >= 3){
-  currentPlannedGroups = createGroups(stillSelectedPlayers);
-  renderWeekPlan(
-    currentPlannedGroups.map(group => ({
-      players: group,
-      avgHcp: groupHandicapAverage(group)
-    }))
-  );
-} else {
-  currentPlannedGroups = null;
-  document.getElementById("weekPlanOutput").innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
-}      
+        updateWeekPlanPreview();
+        renderRound(groups, ref.id, initialResults);
+        setCloudStatus("Runde gespeichert.", "ok");
       }catch(err){
         console.error("generateRound", err);
         alert("Speichern fehlgeschlagen. Details in der Browser-Konsole.");
