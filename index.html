@@ -806,7 +806,7 @@
       groups.forEach(group => {
         s += flightHistory[normalizeFlight(group)] || 0;
       });
-      s += handicapBalancePenalty(groups) * 0.8;
+      s += handicapBalancePenalty(groups) * 0.5;
       return s;
     }
 
