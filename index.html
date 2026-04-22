@@ -1056,17 +1056,32 @@
         setCloudStatus("Speichere Runde in der Cloud …", "warn");
         const ref = await addDoc(collection(db, "rounds"), roundForDb);
 
-        rounds.push({
-          id: ref.id,
-          date: roundForDb.date,
-          createdAt: new Date().toISOString(),
-          groups,
-          results: initialResults
-        });
+rounds.push({
+  id: ref.id,
+  date: roundForDb.date,
+  createdAt: new Date().toISOString(),
+  groups,
+  results: initialResults
+});
 
-        updateWeekPlanPreview();
-        renderRound(groups, ref.id, initialResults);
-        setCloudStatus("Runde gespeichert.", "ok");
+renderRound(groups, ref.id, initialResults);
+setCloudStatus("Runde gespeichert.", "ok");
+
+// Direkt neuen Wochen-Spielplan für dieselben ausgewählten Spieler erzeugen
+const stillSelectedPlayers = Array.from(selected);
+
+if(stillSelectedPlayers.length >= 3){
+  currentPlannedGroups = createGroups(stillSelectedPlayers);
+  renderWeekPlan(
+    currentPlannedGroups.map(group => ({
+      players: group,
+      avgHcp: groupHandicapAverage(group)
+    }))
+  );
+} else {
+  currentPlannedGroups = null;
+  document.getElementById("weekPlanOutput").innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
+}      
       }catch(err){
         console.error("generateRound", err);
         alert("Speichern fehlgeschlagen. Details in der Browser-Konsole.");
