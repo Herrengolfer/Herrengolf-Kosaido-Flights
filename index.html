@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Herrengolf Kosaido FINAL</title>
+<title>Herrengolf Kosaido CLOUD</title>
 
 <style>
 body{font-family:-apple-system,Arial;background:#f5f5f5;margin:0;padding:10px}
@@ -19,7 +19,6 @@ body{font-family:-apple-system,Arial;background:#f5f5f5;margin:0;padding:10px}
 .score-card input{width:100%;font-size:18px;padding:8px;text-align:center}
 
 .live{margin-top:10px;padding:10px;background:#f0f0f0;border-radius:10px}
-
 button{width:100%;padding:12px;border:none;border-radius:12px;background:#d4af37;margin-top:10px;font-weight:bold}
 </style>
 </head>
@@ -35,20 +34,23 @@ button{width:100%;padding:12px;border:none;border-radius:12px;background:#d4af37
 
 <div id="output"></div>
 
-<div class="card">
-<h3>Ranking</h3>
-<div id="ranking"></div>
 </div>
 
-</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<script>
+const firebaseConfig = {
+  apiKey: "DEIN_API_KEY",
+  authDomain: "DEIN_PROJECT.firebaseapp.com",
+  projectId: "DEIN_PROJECT"
+};
 
-const allPlayers=["Luci","Dolli","Carl","Adi","Sascha","Martin","Thomas Wimmer"];
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const allPlayers=["Luci","Dolli","Carl","Adi","Sascha","Martin","Thomas"];
 let selected=new Set();
-let stats={};
-
-allPlayers.forEach(p=>stats[p]={wins:0,losses:0,rounds:0});
 
 function renderPlayers(){
   const el=document.getElementById("players");
@@ -75,93 +77,59 @@ function shuffle(a){
   }
 }
 
-function createGroups(players){
-  let arr=[...players];
-  shuffle(arr);
-  return [arr.slice(0,4),arr.slice(4)];
-}
-
 function generate(){
   const players=[...selected];
   if(players.length<3){alert("mind 3");return;}
-  const groups=createGroups(players);
 
-  document.getElementById("output").innerHTML=groups.map((g,i)=>`
+  shuffle(players);
+
+  document.getElementById("output").innerHTML=`
     <div class="card">
-      <h3>Flight ${i+1}</h3>
+      ${players.map(p=>`
+        <div class="score-card">
+          ${p}
+          <input type="number" id="s-${p}" oninput="live(${JSON.stringify(players)})">
+        </div>
+      `).join("")}
 
-      <div class="score-grid">
-        ${g.map(p=>`
-          <div class="score-card">
-            ${p}
-            <input type="number" id="s-${i}-${p}"
-              oninput="live(${i},${JSON.stringify(g)})">
-          </div>
-        `).join("")}
-      </div>
-
-      <div id="live-${i}" class="live">Live Ranking...</div>
-
-      <button onclick="save(${i},${JSON.stringify(g)})">Speichern</button>
+      <div id="live" class="live">Live Ranking...</div>
+      <button onclick="save(${JSON.stringify(players)})">Speichern</button>
     </div>
-  `).join("");
+  `;
 }
 
-function live(i,g){
-  let scores=g.map(p=>{
-    let v=document.getElementById(`s-${i}-${p}`).value;
+window.live=function(group){
+  let scores=group.map(p=>{
+    let v=document.getElementById("s-"+p).value;
     return {p,pts:Number(v||0)};
   });
 
-  if(scores.every(s=>s.pts==0)){
-    document.getElementById(`live-${i}`).innerHTML="Live Ranking...";
-    return;
-  }
-
   scores.sort((a,b)=>b.pts-a.pts);
 
-  document.getElementById(`live-${i}`).innerHTML=
-    scores.map((s,idx)=>`
-      ${idx==0?"🥇":idx==1?"🥈":idx==2?"🥉":idx==scores.length-1?"💀":""}
-      ${s.p} - ${s.pts}<br>
-    `).join("");
+  document.getElementById("live").innerHTML=
+    scores.map((s,i)=>`${i==0?"🥇":i==scores.length-1?"💀":""} ${s.p} - ${s.pts}<br>`).join("");
 }
 
-function save(i,g){
+window.save=async function(group){
   let code=prompt("Admin-Code?");
-  if(code!="Kosaido"){alert("Kein Zugriff");return;}
+  if(code!="Kosaido"){alert("No");return;}
 
-  let scores=g.map(p=>{
-    let v=document.getElementById(`s-${i}-${p}`).value;
+  let scores=group.map(p=>{
+    let v=document.getElementById("s-"+p).value;
     return {p,pts:Number(v||0)};
   });
 
   scores.sort((a,b)=>b.pts-a.pts);
 
-  let winner=scores[0].p;
-  let loser=scores[scores.length-1].p;
+  await addDoc(collection(db,"rounds"),{
+    date:new Date().toLocaleDateString(),
+    scores
+  });
 
-  stats[winner].wins++;
-  stats[loser].losses++;
-  g.forEach(p=>stats[p].rounds++);
-
-  updateRanking();
-
-  alert("🏆 "+winner+"\n💀 "+loser);
-}
-
-function updateRanking(){
-  let arr=Object.entries(stats);
-  arr.sort((a,b)=>b[1].wins-a[1].wins);
-
-  document.getElementById("ranking").innerHTML=
-    arr.map(([name,s])=>`
-      ${name} - Siege: ${s.wins} / Runden: ${s.rounds}<br>
-    `).join("");
+  alert("Gespeichert in Cloud");
 }
 
 renderPlayers();
-updateRanking();
 
 </script>
 </body>
