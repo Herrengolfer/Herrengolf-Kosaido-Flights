@@ -1,136 +1,916 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Herrengolf Kosaido CLOUD</title>
-
-<style>
-body{font-family:-apple-system,Arial;background:#f5f5f5;margin:0;padding:10px}
-.wrap{max-width:1000px;margin:auto}
-.card{background:white;padding:15px;margin-bottom:15px;border-radius:16px;box-shadow:0 6px 20px rgba(0,0,0,0.08)}
-
-.players{display:flex;flex-wrap:wrap;gap:6px}
-.player{padding:8px 10px;border-radius:999px;border:1px solid #ddd;cursor:pointer}
-.player.active{background:#e6f7ec;border-color:#bde5c8}
-
-.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.score-card{background:#fafafa;padding:10px;border-radius:12px;text-align:center}
-.score-card input{width:100%;font-size:18px;padding:8px;text-align:center}
-
-.live{margin-top:10px;padding:10px;background:#f0f0f0;border-radius:10px}
-button{width:100%;padding:12px;border:none;border-radius:12px;background:#d4af37;margin-top:10px;font-weight:bold}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Herrengolf Kosaido</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#121a2b; --panel-2:#182338; --text:#ecf2ff; --muted:#9fb0d1;
+      --accent:#34d399; --danger:#f87171; --border:#24314c; --shadow:0 14px 40px rgba(0,0,0,.28);
+      --radius:18px; --gold:#fbbf24;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#0a1020 0%, #0c1424 100%);color:var(--text)}
+    .wrap{max-width:1360px;margin:0 auto;padding:24px}
+    .hero{background:linear-gradient(135deg,#0f172a,#14213a 60%,#102948);border:1px solid var(--border);border-radius:24px;padding:22px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.4fr .9fr;gap:18px;margin-bottom:20px}
+    .title{font-size:32px;font-weight:800;letter-spacing:.2px;margin:0 0 6px}
+    .sub{color:var(--muted);margin:0}
+    .hero-right{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+    .stat{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:18px;padding:14px}
+    .stat .k{font-size:12px;color:var(--muted);margin-bottom:8px}
+    .stat .v{font-size:26px;font-weight:800}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+    .stack{display:grid;gap:20px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
+    .card h2{margin:0 0 14px;font-size:18px}
+    .players{display:flex;flex-wrap:wrap;gap:10px}
+    .player{border:1px solid var(--border);background:var(--panel-2);color:var(--text);border-radius:999px;padding:10px 14px;cursor:pointer;transition:.18s ease;user-select:none;font-size:14px}
+    .player:hover{transform:translateY(-1px)}
+    .player.active{background:linear-gradient(135deg,var(--accent),#22c55e);color:#04110c;border-color:transparent;font-weight:700}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+    button, select, input{
+      border-radius:14px;padding:12px 16px;font-size:15px;transition:.18s ease
+    }
+    button{border:0;font-weight:700;cursor:pointer}
+    button:hover{transform:translateY(-1px)}
+    select, input{border:1px solid var(--border);background:#0f172a;color:var(--text);width:100%}
+    input[type="checkbox"]{width:auto}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),#22c55e);color:#04110c}
+    .btn-secondary{background:#22304a;color:var(--text);border:1px solid var(--border)}
+    .btn-danger{background:#3a1f27;color:#ffd7d7;border:1px solid #61313f}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),#f59e0b);color:#1f1400}
+    .btn-small{padding:8px 12px;font-size:13px;border-radius:10px}
+    .muted{color:var(--muted);font-size:14px}
+    .output-grid{display:grid;gap:14px}
+    .flight{background:linear-gradient(180deg,#111a2c,#0e1626);border:1px solid var(--border);border-radius:16px;padding:14px}
+    .flight.saved{box-shadow:0 0 0 2px rgba(52,211,153,.45)}
+    .flight h3{margin:0 0 10px;font-size:17px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+    .chip{background:#1d2a44;border:1px solid #2d3d61;border-radius:999px;padding:8px 12px;font-size:14px}
+    .chip.winner{background:#ddfff2;border-color:#7ee7be;color:#064e3b;font-weight:800}
+    .chip.loser{background:#44202b;border-color:#7c3243;color:#ffd3d9}
+    .chip.lady{background:#4a3710;border-color:#8b6a1c;color:#ffe59c}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th, td{text-align:left;padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+    th{color:var(--muted);font-weight:700}
+    .hint{margin-top:10px;color:var(--muted);font-size:13px}
+    .badge{display:inline-block;background:#16243d;border:1px solid #294067;padding:6px 10px;border-radius:999px;font-size:12px;color:#cfe0ff}
+    .footer-note{margin-top:10px;font-size:13px;color:var(--muted)}
+    .flight-meta{font-size:13px;color:var(--muted);margin-top:6px}
+    .status{margin-top:12px;color:var(--muted);font-size:13px}
+    .ok{color:#86efac}.warn{color:#fcd34d}.err{color:#fca5a5}
+    .winner-box{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:12px;align-items:center}
+    .winner-tag{margin-top:10px;color:#86efac;font-size:13px;font-weight:700}
+    .loser-tag{margin-top:8px;color:#fca5a5;font-size:13px;font-weight:700}
+    .lady-tag{margin-top:8px;color:#fde68a;font-size:13px;font-weight:700}
+    .rank-1 td:first-child{color:var(--gold);font-weight:800}
+    .rank-2 td:first-child{color:#d1d5db;font-weight:700}
+    .rank-3 td:first-child{color:#d97706;font-weight:700}
+    .weekplan{display:grid;gap:12px}
+    .score-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .score-card{background:#0f172a;border:1px solid var(--border);border-radius:14px;padding:10px;text-align:center}
+    .score-card span{display:block;font-size:14px;margin-bottom:8px}
+    .score-card input{font-size:20px;text-align:center;padding:10px 8px}
+    .live-ranking{margin-top:12px;padding:10px;border-radius:14px;background:#0f172a;border:1px solid var(--border)}
+    .live-row{display:flex;justify-content:space-between;gap:8px;padding:4px 0}
+    .filters{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:12px}
+    .chart-wrap{height:320px}
+    canvas{width:100% !important;height:100% !important}
+    @media (max-width:980px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+      .hero-right{grid-template-columns:1fr 1fr}
+      .score-grid,.filters{grid-template-columns:1fr}
+    }
+    @media (max-width:560px){
+      .wrap{padding:14px}
+      .title{font-size:26px}
+      .hero-right{grid-template-columns:1fr}
+      .winner-box{grid-template-columns:1fr}
+      .score-card input{font-size:24px}
+      button, select, input{padding:14px 16px}
+    }
+  </style>
 </head>
-
 <body>
-<div class="wrap">
-
-<div class="card">
-<h3>Spieler auswählen</h3>
-<div id="players" class="players"></div>
-<button onclick="generate()">Runde generieren</button>
-</div>
-
-<div id="output"></div>
-
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "DEIN_API_KEY",
-  authDomain: "DEIN_PROJECT.firebaseapp.com",
-  projectId: "DEIN_PROJECT"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const allPlayers=["Luci","Dolli","Carl","Adi","Sascha","Martin","Thomas"];
-let selected=new Set();
-
-function renderPlayers(){
-  const el=document.getElementById("players");
-  el.innerHTML="";
-  allPlayers.forEach(p=>{
-    const btn=document.createElement("div");
-    btn.className="player"+(selected.has(p)?" active":"");
-    btn.innerText=p;
-    btn.onclick=()=>toggle(p);
-    el.appendChild(btn);
-  });
-}
-
-function toggle(p){
-  if(selected.has(p))selected.delete(p);
-  else selected.add(p);
-  renderPlayers();
-}
-
-function shuffle(a){
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-}
-
-function generate(){
-  const players=[...selected];
-  if(players.length<3){alert("mind 3");return;}
-
-  shuffle(players);
-
-  document.getElementById("output").innerHTML=`
-    <div class="card">
-      ${players.map(p=>`
-        <div class="score-card">
-          ${p}
-          <input type="number" id="s-${p}" oninput="live(${JSON.stringify(players)})">
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <div class="badge">Dashboard</div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <img src="logo.png" alt="Logo" style="height:120px;">
+          <h1 class="title">Herrengolf Kosaido</h1>
         </div>
-      `).join("")}
+        <p class="sub">Flightgenerator & Statistikboard für die wichtigste Turnierserie des Kosaido Golfclubs</p>
+        <p class="footer-note" id="today"></p>
+        <p class="status" id="cloudStatus">Verbinde mit Cloud …</p>
+      </div>
+      <div class="hero-right">
+        <div class="stat"><div class="k">Ausgewählte Spieler</div><div class="v" id="countSelected">0</div></div>
+        <div class="stat"><div class="k">Gewertete Runden</div><div class="v" id="countRounds">0</div></div>
+        <div class="stat"><div class="k">Gewertete Flights</div><div class="v" id="countFlights">0</div></div>
+        <div class="stat"><div class="k">Aufteilung</div><div class="v" style="font-size:16px;line-height:1.3" id="layoutInfo">–</div></div>
+      </div>
+    </section>
 
-      <div id="live" class="live">Live Ranking...</div>
-      <button onclick="save(${JSON.stringify(players)})">Speichern</button>
+    <div class="grid">
+      <div class="stack">
+        <section class="card">
+          <h2>Spieler auswählen</h2>
+          <div class="players" id="players"></div>
+          <div class="toolbar">
+            <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
+            <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
+            <button class="btn-secondary" id="allBtn">Alle auswählen</button>
+            <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
+            <button class="btn-danger" id="resetBtn">♻️ Cloud-Daten löschen</button>
+          </div>
+          <div class="hint">Der angezeigte Wochen-Spielplan ist identisch mit der nächsten generierten Runde.</div>
+        </section>
+
+        <section class="card">
+          <h2>Ranking</h2>
+          <table>
+            <thead><tr><th>Platz</th><th>Spieler</th><th>Flight-Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr></thead>
+            <tbody id="rankingBody"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="card">
+          <h2>Wochen-Spielplan</h2>
+          <div id="weekPlanOutput" class="weekplan"><div class="muted">Noch kein Spielplan erstellt.</div></div>
+          <div class="hint">Ändert sich automatisch bei neuer Spieler-Auswahl und nach jeder generierten Runde.</div>
+        </section>
+
+        <section class="card">
+          <h2>Flights & Ergebnisse</h2>
+          <div id="output" class="output-grid"><div class="muted">Noch keine Runde erzeugt.</div></div>
+        </section>
+      </div>
     </div>
-  `;
-}
 
-window.live=function(group){
-  let scores=group.map(p=>{
-    let v=document.getElementById("s-"+p).value;
-    return {p,pts:Number(v||0)};
-  });
+    <div class="grid" style="margin-top:20px">
+      <section class="card">
+        <h2>Spieler-Statistik</h2>
+        <table>
+          <thead><tr><th>Spieler</th><th>Runden</th><th>Siege</th><th>Niederlagen</th><th>Ø Punkte</th><th>Top-Partner</th></tr></thead>
+          <tbody id="playerStatsBody"></tbody>
+        </table>
+      </section>
 
-  scores.sort((a,b)=>b.pts-a.pts);
+      <section class="card">
+        <h2>Saisonwertung</h2>
+        <table>
+          <thead><tr><th>Platz</th><th>Spieler</th><th>Siege</th><th>Niederlagen</th><th>Gesamtpunkte</th></tr></thead>
+          <tbody id="seasonBody"></tbody>
+        </table>
+      </section>
+    </div>
 
-  document.getElementById("live").innerHTML=
-    scores.map((s,i)=>`${i==0?"🥇":i==scores.length-1?"💀":""} ${s.p} - ${s.pts}<br>`).join("");
-}
+    <div class="grid" style="margin-top:20px">
+      <section class="card">
+        <h2>Diagramm: Siege & Niederlagen</h2>
+        <div class="chart-wrap"><canvas id="winsLossesChart"></canvas></div>
+      </section>
 
-window.save=async function(group){
-  let code=prompt("Admin-Code?");
-  if(code!="Kosaido"){alert("No");return;}
+      <section class="card">
+        <h2>Diagramm: Punkte-Schnitt</h2>
+        <div class="chart-wrap"><canvas id="pointsChart"></canvas></div>
+      </section>
+    </div>
 
-  let scores=group.map(p=>{
-    let v=document.getElementById("s-"+p).value;
-    return {p,pts:Number(v||0)};
-  });
+    <div class="grid" style="margin-top:20px">
+      <section class="card">
+        <h2>Flight-Statistik</h2>
+        <table>
+          <thead><tr><th>Flight</th><th>Wie oft gewertet</th></tr></thead>
+          <tbody id="statsBody"></tbody>
+        </table>
+      </section>
 
-  scores.sort((a,b)=>b.pts-a.pts);
+      <section class="card">
+        <h2>Ergebnisse Historie</h2>
+        <table>
+          <thead><tr><th>Datum</th><th>Flight</th><th>Gewinner</th><th>Verlierer</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </section>
+    </div>
 
-  await addDoc(collection(db,"rounds"),{
-    date:new Date().toLocaleDateString(),
-    scores
-  });
+    <section class="card" style="margin-top:20px">
+      <h2>Verlauf pro Spieler</h2>
+      <div class="filters">
+        <select id="historyPlayerFilter"></select>
+        <button class="btn-secondary" id="clearHistoryFilterBtn">Filter zurücksetzen</button>
+      </div>
+      <table>
+        <thead><tr><th>Datum</th><th>Flight</th><th>Rolle</th><th>Punkte</th></tr></thead>
+        <tbody id="playerHistoryBody"></tbody>
+      </table>
+    </section>
+  </div>
 
-  alert("Gespeichert in Cloud");
-}
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, query, orderBy, serverTimestamp, writeBatch, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-renderPlayers();
+    const firebaseConfig = {
+      apiKey: "DEIN_API_KEY",
+      authDomain: "DEIN_PROJECT.firebaseapp.com",
+      projectId: "DEIN_PROJECT"
+    };
 
-</script>
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi"];
+    let selected = new Set();
+    let rounds = [];
+    let flightHistory = {};
+    let playerStats = {};
+    let partnerStats = {};
+    let selectedHistoryPlayer = "";
+    let winsLossesChart = null;
+    let pointsChart = null;
+    let currentPlannedGroups = null;
+
+    document.getElementById("today").innerText = new Date().toLocaleDateString("de-DE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+
+    function setCloudStatus(text, cls=""){
+      const el = document.getElementById("cloudStatus");
+      el.className = "status " + cls;
+      el.textContent = text;
+    }
+
+    function normalizeFlight(group){ return [...group].sort((a,b) => a.localeCompare(b, "de")).join(" | "); }
+    function cssSafe(value){ return value.replaceAll(" ","_").replaceAll(".","_").replaceAll("ä","ae").replaceAll("ö","oe").replaceAll("ü","ue").replaceAll("ß","ss"); }
+    function dbGroupsToArrays(groups){ return (groups || []).map(g => Array.isArray(g.players) ? g.players : []).filter(g => g.length > 0); }
+    function arraysToDbGroups(groups){ return groups.map(group => ({ players: group })); }
+    function emptyResults(groups){ return groups.map(group => ({ winner: "", loser: "", scoreMap: Object.fromEntries(group.map(name => [name, ""])) })); }
+
+    function normalizeResults(results, groups){
+      const src = Array.isArray(results) ? results : [];
+      return groups.map((group, idx) => {
+        const row = src[idx] || {};
+        const winner = typeof row.winner === "string" && group.includes(row.winner) ? row.winner : "";
+        const loser = typeof row.loser === "string" && group.includes(row.loser) ? row.loser : "";
+        const rawScoreMap = row.scoreMap && typeof row.scoreMap === "object" ? row.scoreMap : {};
+        const scoreMap = {};
+        group.forEach(name => {
+          const val = rawScoreMap[name];
+          scoreMap[name] = Number.isFinite(Number(val)) ? Number(val) : "";
+        });
+        return { winner, loser, scoreMap };
+      });
+    }
+
+    function isCompleteResult(group, result){
+      return !!(
+        result &&
+        result.winner &&
+        result.loser &&
+        group.includes(result.winner) &&
+        group.includes(result.loser) &&
+        result.winner !== result.loser
+      );
+    }
+
+    function getPreferredLayout(count){
+      if(count < 3) return [];
+      if(count === 3) return [3];
+      if(count === 4) return [4];
+      if(count === 5) return [3,2];
+      if(count === 6) return [3,3];
+      if(count === 7) return [4,3];
+      if(count === 8) return [4,4];
+      if(count === 9) return [4,3,2];
+      if(count === 10) return [4,3,3];
+      if(count === 11) return [4,4,3];
+      const layout = [];
+      let remaining = count;
+      while(remaining > 11){ layout.push(4); remaining -= 4; }
+      return layout.concat(getPreferredLayout(remaining));
+    }
+
+    function formatLayout(layout){ return layout.length ? layout.join(" + ") : "–"; }
+
+    function updateTopStats(){
+      const currentLayout = getPreferredLayout(selected.size);
+      document.getElementById("countSelected").innerText = selected.size;
+      document.getElementById("countRounds").innerText = rounds.filter(r => (r.results || []).some((res, idx) => isCompleteResult(r.groups[idx] || [], res))).length;
+      document.getElementById("countFlights").innerText = Object.keys(flightHistory).length;
+      document.getElementById("layoutInfo").innerText = formatLayout(currentLayout);
+    }
+
+    function renderPlayers(){
+      const container = document.getElementById("players");
+      container.innerHTML = "";
+      allPlayers.forEach((name) => {
+        const el = document.createElement("button");
+        el.type = "button";
+        el.className = "player" + (selected.has(name) ? " active" : "");
+        el.textContent = name;
+        el.addEventListener("click", () => togglePlayer(name));
+        container.appendChild(el);
+      });
+      updateTopStats();
+    }
+
+    function rebuildAllStats(){
+      const history = {};
+      const pStats = {};
+      const pPartners = {};
+
+      allPlayers.forEach(name => {
+        pStats[name] = { rounds: 0, wins: 0, losses: 0, totalPoints: 0, avgPoints: 0 };
+        pPartners[name] = {};
+      });
+
+      rounds.forEach(round => {
+        (round.groups || []).forEach((group, idx) => {
+          const result = round.results?.[idx] || {};
+          if(!isCompleteResult(group, result)) return;
+
+          const key = normalizeFlight(group);
+          history[key] = (history[key] || 0) + 1;
+
+          group.forEach(player => {
+            pStats[player].rounds += 1;
+            const pts = Number(result.scoreMap?.[player] || 0);
+            pStats[player].totalPoints += pts;
+          });
+
+          for(let i=0;i<group.length;i++){
+            for(let j=i+1;j<group.length;j++){
+              const a = group[i], b = group[j];
+              pPartners[a][b] = (pPartners[a][b] || 0) + 1;
+              pPartners[b][a] = (pPartners[b][a] || 0) + 1;
+            }
+          }
+
+          pStats[result.winner].wins += 1;
+          pStats[result.loser].losses += 1;
+        });
+      });
+
+      Object.keys(pStats).forEach(name => {
+        pStats[name].avgPoints = pStats[name].rounds ? +(pStats[name].totalPoints / pStats[name].rounds).toFixed(1) : 0;
+      });
+
+      flightHistory = history;
+      playerStats = pStats;
+      partnerStats = pPartners;
+    }
+
+    function getTopPartner(name){
+      const partners = partnerStats[name] || {};
+      const entries = Object.entries(partners).sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0], "de"));
+      if(entries.length === 0) return "–";
+      return `${entries[0][0]} (${entries[0][1]}x)`;
+    }
+
+    function renderWeekPlan(groups){
+      const box = document.getElementById("weekPlanOutput");
+      if(!groups || groups.length === 0){
+        box.innerHTML = '<div class="muted">Noch kein Spielplan erstellt.</div>';
+        return;
+      }
+      box.innerHTML = groups.map((group, idx) => `
+        <div class="flight">
+          <h3>Flight ${idx + 1}</h3>
+          <div class="chips">${group.map(name => `<div class="chip">${name}</div>`).join('')}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderFlightStats(){
+      const tbody = document.getElementById("statsBody");
+      const entries = Object.entries(flightHistory).sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0], "de"));
+      if(entries.length === 0){
+        tbody.innerHTML = '<tr><td colspan="2" class="muted">Noch keine vollständigen Ergebnisse vorhanden.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = entries.map(([flight, count]) => `<tr><td>${flight}</td><td>${count}x</td></tr>`).join("");
+    }
+
+    function renderRanking(){
+      const tbody = document.getElementById("rankingBody");
+      const rows = Object.entries(playerStats).sort((a,b) =>
+        (b[1].wins - a[1].wins) ||
+        (a[1].losses - b[1].losses) ||
+        (b[1].rounds - a[1].rounds) ||
+        a[0].localeCompare(b[0], "de")
+      );
+      tbody.innerHTML = rows.map(([name, stats], idx) => `
+        <tr class="${idx===0?'rank-1':idx===1?'rank-2':idx===2?'rank-3':''}">
+          <td>${idx + 1}</td>
+          <td>${name}</td>
+          <td>${stats.wins}</td>
+          <td>${stats.losses}</td>
+          <td>${stats.rounds}</td>
+          <td>${stats.rounds ? Math.round((stats.wins / stats.rounds)*100) : 0}%</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderSeasonRanking(){
+      const tbody = document.getElementById("seasonBody");
+      const rows = Object.entries(playerStats).sort((a,b) =>
+        (b[1].wins - a[1].wins) ||
+        (b[1].totalPoints - a[1].totalPoints) ||
+        (a[1].losses - b[1].losses) ||
+        a[0].localeCompare(b[0], "de")
+      );
+      tbody.innerHTML = rows.map(([name, stats], idx) => `
+        <tr class="${idx===0?'rank-1':idx===1?'rank-2':idx===2?'rank-3':''}">
+          <td>${idx + 1}</td>
+          <td>${name}</td>
+          <td>${stats.wins}</td>
+          <td>${stats.losses}</td>
+          <td>${stats.totalPoints}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderPlayerStats(){
+      const tbody = document.getElementById("playerStatsBody");
+      const rows = Object.entries(playerStats).sort((a,b) => (b[1].rounds - a[1].rounds) || a[0].localeCompare(b[0], "de"));
+      tbody.innerHTML = rows.map(([name, stats]) => `
+        <tr>
+          <td>${name}</td>
+          <td>${stats.rounds}</td>
+          <td>${stats.wins}</td>
+          <td>${stats.losses}</td>
+          <td>${stats.avgPoints}</td>
+          <td>${getTopPartner(name)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderHistory(){
+      const tbody = document.getElementById("historyBody");
+      const rows = [];
+      rounds.forEach(round => {
+        const date = round.date || "-";
+        (round.groups || []).forEach((group, idx) => {
+          const result = round.results?.[idx] || {};
+          if(!isCompleteResult(group, result)) return;
+          rows.push(`
+            <tr>
+              <td>${date}</td>
+              <td>${group.join(", ")}</td>
+              <td>${result.winner || "-"}</td>
+              <td>${result.loser || "-"}</td>
+            </tr>
+          `);
+        });
+      });
+      tbody.innerHTML = rows.length ? rows.reverse().join("") : '<tr><td colspan="4" class="muted">Noch keine vollständigen Ergebnisse vorhanden.</td></tr>';
+    }
+
+    function renderHistoryFilter(){
+      const select = document.getElementById("historyPlayerFilter");
+      select.innerHTML = ['<option value="">Alle Spieler</option>']
+        .concat(allPlayers.map(name => `<option value="${name}" ${selectedHistoryPlayer===name?'selected':''}>${name}</option>`))
+        .join("");
+    }
+
+    function renderPlayerHistory(){
+      const tbody = document.getElementById("playerHistoryBody");
+      const rows = [];
+      const filter = selectedHistoryPlayer;
+
+      rounds.forEach(round => {
+        const date = round.date || "-";
+        (round.groups || []).forEach((group, idx) => {
+          const result = round.results?.[idx] || {};
+          if(!isCompleteResult(group, result)) return;
+
+          group.forEach(player => {
+            if(filter && player !== filter) return;
+            const roles = [];
+            if(result.winner === player) roles.push("Gewinner");
+            if(result.loser === player) roles.push("Verlierer");
+            if(roles.length === 0) roles.push("Mitgespielt");
+            rows.push(`
+              <tr>
+                <td>${date}</td>
+                <td>${group.join(", ")}</td>
+                <td>${player}: ${roles.join(", ")}</td>
+                <td>${result.scoreMap?.[player] ?? "-"}</td>
+              </tr>
+            `);
+          });
+        });
+      });
+
+      tbody.innerHTML = rows.length ? rows.reverse().join("") : '<tr><td colspan="4" class="muted">Noch keine vollständigen Ergebnisse vorhanden.</td></tr>';
+    }
+
+    function renderCharts(){
+      const labels = allPlayers.slice();
+      const wins = labels.map(name => playerStats[name]?.wins || 0);
+      const losses = labels.map(name => playerStats[name]?.losses || 0);
+      const avgPoints = labels.map(name => playerStats[name]?.avgPoints || 0);
+
+      if(winsLossesChart) winsLossesChart.destroy();
+      if(pointsChart) pointsChart.destroy();
+
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: "#ecf2ff" } } },
+        scales: {
+          x: { ticks: { color: "#9fb0d1" }, grid: { color: "#24314c" } },
+          y: { beginAtZero: true, ticks: { color: "#9fb0d1" }, grid: { color: "#24314c" } }
+        }
+      };
+
+      winsLossesChart = new Chart(document.getElementById("winsLossesChart").getContext("2d"), {
+        type: "bar",
+        data: { labels, datasets: [{ label: "Siege", data: wins }, { label: "Niederlagen", data: losses }] },
+        options: commonOptions
+      });
+
+      pointsChart = new Chart(document.getElementById("pointsChart").getContext("2d"), {
+        type: "bar",
+        data: { labels, datasets: [{ label: "Ø Stableford-Punkte", data: avgPoints }] },
+        options: commonOptions
+      });
+    }
+
+    function renderAllStats(){
+      renderFlightStats();
+      renderRanking();
+      renderSeasonRanking();
+      renderPlayerStats();
+      renderHistory();
+      renderHistoryFilter();
+      renderPlayerHistory();
+      renderCharts();
+      updateTopStats();
+    }
+
+    function togglePlayer(name){
+      if(selected.has(name)) selected.delete(name); else selected.add(name);
+      updateCurrentPlan();
+      renderPlayers();
+    }
+
+    function selectAll(){ selected = new Set(allPlayers); updateCurrentPlan(); renderPlayers(); }
+    function clearSelection(){ selected.clear(); updateCurrentPlan(); renderPlayers(); }
+
+    function shuffle(array){
+      for(let i = array.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function buildGroupsByLayout(shuffledPlayers, layout){
+      const groups = [];
+      let index = 0;
+      layout.forEach(size => {
+        groups.push(shuffledPlayers.slice(index, index + size));
+        index += size;
+      });
+      return groups;
+    }
+
+    function score(groups){
+      let s = 0;
+      groups.forEach(group => { s += flightHistory[normalizeFlight(group)] || 0; });
+      return s;
+    }
+
+    function createGroups(players){
+      const layout = getPreferredLayout(players.length);
+      let bestScore = Infinity;
+      let candidates = [];
+
+      for(let attempt = 0; attempt < 6000; attempt++){
+        const shuffled = [...players];
+        shuffle(shuffled);
+        const groups = buildGroupsByLayout(shuffled, layout);
+        const currentScore = score(groups);
+
+        if(currentScore < bestScore){
+          bestScore = currentScore;
+          candidates = [groups];
+        } else if(currentScore <= bestScore + 0.75){
+          candidates.push(groups);
+        }
+      }
+
+      if(!candidates.length){
+        const fallback = [...players];
+        shuffle(fallback);
+        return buildGroupsByLayout(fallback, layout);
+      }
+
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    function updateCurrentPlan(){
+      const players = Array.from(selected);
+      if(players.length < 3){
+        currentPlannedGroups = null;
+        renderWeekPlan([]);
+        return;
+      }
+      currentPlannedGroups = createGroups(players);
+      renderWeekPlan(currentPlannedGroups);
+    }
+
+    function updateLiveRanking(roundId, flightIndex, group){
+      const scores = group.map(name => {
+        const val = document.getElementById(`score-${roundId}-${flightIndex}-${cssSafe(name)}`).value;
+        return { name, points: Number(val || 0) };
+      });
+
+      const liveBox = document.getElementById(`live-${roundId}-${flightIndex}`);
+      if(scores.every(s => s.points === 0)){
+        liveBox.innerHTML = '<div class="muted">Live Ranking erscheint hier…</div>';
+        return;
+      }
+
+      scores.sort((a,b)=>b.points-a.points);
+
+      liveBox.innerHTML = scores.map((s,i)=>`
+        <div class="live-row">
+          <span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i===scores.length-1?'💀':''} ${s.name}</span>
+          <strong>${s.points}</strong>
+        </div>
+      `).join("");
+    }
+    window.updateLiveRanking = updateLiveRanking;
+
+    async function saveFlightResult(roundId, flightIndex){
+      const adminCode = prompt("Admin-Code eingeben:");
+      if(adminCode !== "Kosaido"){
+        alert("Kein Zugriff!");
+        return;
+      }
+
+      const round = rounds.find(r => r.id === roundId);
+      if(!round) return;
+
+      const group = round.groups[flightIndex];
+      const scores = group.map(name => {
+        const val = document.getElementById(`score-${roundId}-${flightIndex}-${cssSafe(name)}`).value;
+        return { name, points: Number(val || 0) };
+      });
+
+      if(scores.some(s => !Number.isFinite(s.points) || s.points <= 0)){
+        alert("Bitte für jeden Spieler eine Stableford-Punktzahl eingeben.");
+        return;
+      }
+
+      scores.sort((a,b)=>b.points-a.points);
+      const winner = scores[0].name;
+      const loser = scores[scores.length - 1].name;
+      const scoreMap = Object.fromEntries(scores.map(s => [s.name, s.points]));
+
+      const nextResults = normalizeResults(round.results, round.groups);
+      nextResults[flightIndex] = { winner, loser, scoreMap };
+
+      try{
+        setCloudStatus("Speichere Ergebnis …", "warn");
+        await updateDoc(doc(db, "rounds", roundId), { results: nextResults });
+        round.results = nextResults;
+        rebuildAllStats();
+        renderAllStats();
+        renderRound(round.groups, round.id, round.results);
+        setCloudStatus("Ergebnis gespeichert.", "ok");
+      }catch(err){
+        console.error("saveFlightResult", err);
+        alert("Ergebnis konnte nicht gespeichert werden.");
+        setCloudStatus("Ergebnis speichern fehlgeschlagen.", "err");
+      }
+    }
+
+    function renderRound(groups, roundId=null, results=[]){
+      const output = document.getElementById("output");
+      if(!groups || groups.length === 0){
+        output.innerHTML = '<div class="muted">Noch keine Runde erzeugt.</div>';
+        return;
+      }
+
+      output.innerHTML = groups.map((group, idx) => {
+        const result = results[idx] || { winner: "", loser: "", scoreMap: {} };
+        const sortedLive = group
+          .map(name => ({ name, points: Number(result.scoreMap?.[name] || 0) }))
+          .sort((a,b)=>b.points-a.points);
+
+        return `
+          <div class="flight ${isCompleteResult(group, result) ? 'saved' : ''}">
+            <h3>Flight ${idx + 1}</h3>
+            <div class="chips">
+              ${group.map(name => {
+                const cls = [
+                  'chip',
+                  result.winner === name ? 'winner' : '',
+                  result.loser === name ? 'loser' : ''
+                ].filter(Boolean).join(' ');
+                return `<div class="${cls}">${name}</div>`;
+              }).join("")}
+            </div>
+
+            <div class="score-grid">
+              ${group.map(name => `
+                <div class="score-card">
+                  <span>${name}</span>
+                  <input
+                    type="number"
+                    min="0"
+                    inputmode="numeric"
+                    placeholder="36"
+                    id="score-${roundId}-${idx}-${cssSafe(name)}"
+                    value="${result.scoreMap?.[name] ?? ''}"
+                    oninput="updateLiveRanking('${roundId}', ${idx}, ${JSON.stringify(group).replace(/"/g, '&quot;')})"
+                  >
+                </div>
+              `).join("")}
+            </div>
+
+            <div class="live-ranking" id="live-${roundId}-${idx}">
+              ${sortedLive.every(s => !s.points)
+                ? '<div class="muted">Live Ranking erscheint hier…</div>'
+                : sortedLive.map((s,i)=>`
+                  <div class="live-row">
+                    <span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i===sortedLive.length-1?'💀':''} ${s.name}</span>
+                    <strong>${s.points}</strong>
+                  </div>
+                `).join("")
+              }
+            </div>
+
+            <div class="winner-box">
+              <div class="hint" style="margin:0">Stableford-Punkte eingeben. Gewinner und Verlierer werden automatisch berechnet.</div>
+              <button class="btn-gold" data-round="${roundId}" data-flight="${idx}">📊 Ergebnis berechnen & speichern</button>
+            </div>
+
+            ${result.winner ? `<div class="winner-tag">🏆 ${result.winner}</div>` : ""}
+            ${result.loser ? `<div class="loser-tag">💀 ${result.loser}</div>` : ""}
+          </div>
+        `;
+      }).join("");
+
+      output.querySelectorAll(".btn-gold").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const roundId = btn.getAttribute("data-round");
+          const flightIndex = Number(btn.getAttribute("data-flight"));
+          saveFlightResult(roundId, flightIndex);
+        });
+      });
+    }
+
+    async function loadRounds(){
+      setCloudStatus("Lade Cloud-Daten …");
+      try{
+        const q = query(collection(db, "rounds"), orderBy("createdAt", "asc"));
+        const snap = await getDocs(q);
+
+        rounds = snap.docs.map(d => {
+          const data = d.data();
+          const groups = dbGroupsToArrays(data.groups);
+          return {
+            id: d.id,
+            date: data.date || "",
+            createdAt: data.createdAt || null,
+            groups,
+            results: normalizeResults(data.results, groups)
+          };
+        }).filter(r => r.groups.length > 0);
+
+        rebuildAllStats();
+        renderAllStats();
+
+        if(rounds.length > 0){
+          const last = rounds[rounds.length - 1];
+          renderRound(last.groups, last.id, last.results);
+        }
+
+        setCloudStatus("Cloud verbunden.", "ok");
+      }catch(err){
+        console.error("loadRounds", err);
+        setCloudStatus("Cloud-Fehler. Prüfe Firestore / Config.", "err");
+      }
+    }
+
+    async function generateRound(){
+      const players = Array.from(selected);
+      if(players.length < 3){
+        alert("Bitte mindestens 3 Spieler auswählen.");
+        return;
+      }
+
+      let groups = null;
+      const playerKey = [...players].sort((a,b) => a.localeCompare(b, "de")).join("|");
+      const plannedKey = currentPlannedGroups ? currentPlannedGroups.flat().sort((a,b) => a.localeCompare(b, "de")).join("|") : "";
+
+      if(currentPlannedGroups && plannedKey === playerKey){
+        groups = currentPlannedGroups;
+      } else {
+        groups = createGroups(players);
+      }
+
+      const initialResults = emptyResults(groups);
+      const roundForDb = {
+        date: new Date().toLocaleDateString("de-DE"),
+        createdAt: serverTimestamp(),
+        groups: arraysToDbGroups(groups),
+        results: initialResults
+      };
+
+      try{
+        setCloudStatus("Speichere Runde in der Cloud …", "warn");
+        const ref = await addDoc(collection(db, "rounds"), roundForDb);
+
+        rounds.push({
+          id: ref.id,
+          date: roundForDb.date,
+          createdAt: new Date().toISOString(),
+          groups,
+          results: initialResults
+        });
+
+        renderRound(groups, ref.id, initialResults);
+        setCloudStatus("Runde gespeichert.", "ok");
+        updateCurrentPlan();
+      }catch(err){
+        console.error("generateRound", err);
+        alert("Speichern fehlgeschlagen. Prüfe Firebase Config / Firestore.");
+        setCloudStatus("Speichern fehlgeschlagen.", "err");
+      }
+    }
+
+    function showLastRound(){
+      if(rounds.length === 0){
+        alert("Noch keine Runde gespeichert.");
+        return;
+      }
+      const last = rounds[rounds.length - 1];
+      renderRound(last.groups, last.id, last.results);
+    }
+
+    async function resetAll(){
+      const password = prompt("Admin-Code eingeben:");
+      if(password !== "Kosaido"){
+        alert("Kein Zugriff!");
+        return;
+      }
+      if(!confirm("Wirklich alle Cloud-Daten löschen?")) return;
+
+      try{
+        setCloudStatus("Lösche Cloud-Daten …", "warn");
+        const snap = await getDocs(collection(db, "rounds"));
+        const batch = writeBatch(db);
+        snap.forEach(d => batch.delete(doc(db, "rounds", d.id)));
+        await batch.commit();
+
+        rounds = [];
+        flightHistory = {};
+        playerStats = {};
+        partnerStats = {};
+        selected.clear();
+        currentPlannedGroups = null;
+        renderPlayers();
+        renderAllStats();
+        renderRound([]);
+        renderWeekPlan([]);
+        setCloudStatus("Alle Cloud-Daten wurden gelöscht.", "ok");
+      }catch(err){
+        console.error("resetAll", err);
+        alert("Löschen fehlgeschlagen.");
+      }
+    }
+
+    document.getElementById("generateBtn").addEventListener("click", generateRound);
+    document.getElementById("lastBtn").addEventListener("click", showLastRound);
+    document.getElementById("allBtn").addEventListener("click", selectAll);
+    document.getElementById("clearBtn").addEventListener("click", clearSelection);
+    document.getElementById("resetBtn").addEventListener("click", resetAll);
+    document.getElementById("historyPlayerFilter").addEventListener("change", (e) => {
+      selectedHistoryPlayer = e.target.value;
+      renderPlayerHistory();
+    });
+    document.getElementById("clearHistoryFilterBtn").addEventListener("click", () => {
+      selectedHistoryPlayer = "";
+      renderHistoryFilter();
+      renderPlayerHistory();
+    });
+
+    renderPlayers();
+    rebuildAllStats();
+    renderAllStats();
+    updateTopStats();
+    updateCurrentPlan();
+    await loadRounds();
+  </script>
 </body>
 </html>
