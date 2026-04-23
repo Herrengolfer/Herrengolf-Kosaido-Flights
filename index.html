@@ -419,23 +419,17 @@
       }));
     }
 
-    function normalizeResults(results, groups){
-      const src = Array.isArray(results) ? results : [];
-      return groups.map((group, idx) => {
-        const row = src[idx] || {};
-        const winner = typeof row.winner === "string" && group.includes(row.winner) ? row.winner : "";
-        const loser = typeof row.loser === "string" && group.includes(row.loser) ? row.loser : "";
-        const ladies = Array.isArray(row.ladies) ? row.ladies.filter(name => group.includes(name)) : [];
-
-        const rawScorecards = row.scorecards && typeof row.scorecards === "object" ? row.scorecards : {};
-        const scorecards = {};
-        group.forEach(name => {
-          const arr = Array.isArray(rawScorecards[name]) ? rawScorecards[name].slice(0, 9) : [];
-          scorecards[name] = Array.from({length:9}, (_, i) => {
-            const val = arr[i];
-            return Number.isFinite(Number(val)) && Number(val) > 0 ? Number(val) : "";
-          });
-        });
+  function normalizeResults(results, groups){
+  const src = Array.isArray(results) ? results : [];
+  return groups.map((group, idx) => {
+    const r = src[idx] || {};
+    return {
+      winner: group.includes(r.winner) ? r.winner : "",
+      loser: group.includes(r.loser) ? r.loser : "",
+      ladies: Array.isArray(r.ladies) ? r.ladies.filter(p => group.includes(p)) : []
+    };
+  });
+}
 
         const holeWinners = Array.isArray(row.holeWinners) ? row.holeWinners.slice(0, 9) : Array(9).fill(null);
         const holeStatus = Array.isArray(row.holeStatus) ? row.holeStatus.slice(0, 9) : Array(9).fill("");
