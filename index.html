@@ -636,7 +636,7 @@
     function computeMatchplayState(group, result){
       const relMap = relativeHandicapMap(group);
       const holeSummaries = [];
-      const holeWins = Object.fromEntries(group.map(name => [name, 0]));
+      const matchPoints = Object.fromEntries(group.map(name => [name, 0]));
       const totalNet = Object.fromEntries(group.map(name => [name, 0]));
       const totalGross = Object.fromEntries(group.map(name => [name, 0]));
 
@@ -671,13 +671,13 @@
         const bestNet = Math.min(...grossEntries.map(entry => entry.net));
         const winners = grossEntries.filter(entry => entry.net === bestNet).map(entry => entry.name);
 
-        if(winners.length === 1){
-          holeWins[winners[0]] += 1;
-        }
+        winners.forEach(name => {
+          matchPoints[name] += 1;
+        });
 
         const status = winners.length === 1
-          ? `${winners[0]} gewinnt Loch ${hole.hole}`
-          : `Loch ${hole.hole} geteilt: ${winners.join(", ")}`;
+          ? `${winners[0]} gewinnt Loch ${hole.hole} und erhält 1 Punkt`
+          : `Loch ${hole.hole} geteilt: ${winners.join(", ")} erhalten jeweils 1 Punkt`;
 
         holeSummaries.push({
           hole: hole.hole,
@@ -692,11 +692,11 @@
 
       const ranking = group.map(name => ({
         name,
-        holeWins: holeWins[name],
+        matchPoints: matchPoints[name],
         totalNet: totalNet[name],
         totalGross: totalGross[name]
       })).sort((a,b) =>
-        (b.holeWins - a.holeWins) ||
+        (b.matchPoints - a.matchPoints) ||
         (a.totalNet - b.totalNet) ||
         (a.totalGross - b.totalGross) ||
         a.name.localeCompare(b.name, "de")
@@ -708,7 +708,7 @@
 
       return {
         holeSummaries,
-        holeWins,
+        matchPoints,
         ranking,
         winner: ranking[0]?.name || "",
         loser: ranking[ranking.length - 1]?.name || "",
@@ -728,7 +728,7 @@
 
       const leader = ranking[0];
       const second = ranking[1];
-      const diff = leader.holeWins - second.holeWins;
+      const diff = leader.matchPoints - second.matchPoints;
 
       if(diff <= 0){
         return {
@@ -1264,7 +1264,7 @@
                 ${matchState.ranking.map((row, rankIdx) => `
                   <div class="live-row">
                     <span>${rankIdx===0?'🥇':rankIdx===1?'🥈':rankIdx===2?'🥉':rankIdx===matchState.ranking.length-1?'💀':''} ${row.name}</span>
-                    <span>${row.holeWins} Lochgewinne · Netto ${row.totalNet}</span>
+                    <span>${row.matchPoints} Punkte · Netto ${row.totalNet}</span>
                   </div>
                 `).join("")}
               </div>
