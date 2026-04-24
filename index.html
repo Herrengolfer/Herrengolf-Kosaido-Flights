@@ -491,7 +491,6 @@
       }).join("");
     }
 
-    let adminUnlocked={};
     window.unlockFlight=(roundId,flightKey)=>{ const pw=prompt("Admin-Code eingeben:"); if(pw!=="Kosaido"){alert("Kein Zugriff");return;} adminUnlocked[roundId+"__"+flightKey]=true; renderRound(rounds.find(r=>r.id===roundId)); };
     window.toggleLady=(roundId,flightKey,player)=>{ const round=rounds.find(r=>r.id===roundId); const f=round.flights[flightKey]; f.ladies=f.ladies||[]; f.ladies.includes(player)?f.ladies=f.ladies.filter(x=>x!==player):f.ladies.push(player); renderRound(round); };
 
