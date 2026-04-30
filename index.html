@@ -1,194 +1,819 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Herrengolf FINAL ELITE</title>
-<style>
-body{font-family:Arial;background:#f5f5f5;padding:20px}
-.card{background:#fff;padding:15px;margin-bottom:20px;border-radius:10px}
-.player{display:inline-block;padding:6px 10px;margin:4px;border:1px solid #ccc;border-radius:8px;cursor:pointer}
-.selected{background:#4caf50;color:white}
-input{width:60px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Herrengolf Kosaido Elite+</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --bg:#f7f8fa;
+      --bg-2:#eef2f7;
+      --panel:#ffffff;
+      --panel-2:#fafbfd;
+      --text:#0f172a;
+      --muted:#667085;
+      --accent:#22c55e;
+      --accent-2:#16a34a;
+      --danger:#dc6472;
+      --border:#e6ebf2;
+      --shadow:0 16px 45px rgba(15,23,42,.07);
+      --shadow-soft:0 4px 16px rgba(15,23,42,.05);
+      --radius:20px;
+      --gold:#d4a72c;
+      --blue:#2563eb;
+      --success-bg:#ecfdf3;
+      --danger-bg:#fff1f3;
+      --gold-bg:#fff8e1;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,var(--bg) 0%, var(--bg-2) 100%);
+      color:var(--text);
+    }
+    .wrap{max-width:1380px;margin:0 auto;padding:24px}
+    .hero{
+      background:linear-gradient(180deg,#ffffff 0%, #fcfdff 100%);
+      border:1px solid var(--border);
+      border-radius:30px;
+      padding:26px;
+      box-shadow:var(--shadow);
+      display:grid;
+      grid-template-columns:1.35fr .95fr;
+      gap:18px;
+      margin-bottom:22px;
+    }
+    .brand{display:flex;align-items:center;gap:16px;margin-top:14px}
+    .brand img{
+      height:104px;
+      object-fit:contain;
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 8px 24px rgba(15,23,42,.08);
+    }
+    .title{font-size:34px;font-weight:850;letter-spacing:-.04em;margin:0 0 6px;color:var(--text)}
+    .sub{color:var(--muted);margin:0;line-height:1.55}
+    .hero-right{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+    .stat{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:16px;
+      box-shadow:var(--shadow-soft);
+    }
+    .stat .k{font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em;font-weight:800}
+    .stat .v{font-size:28px;font-weight:850;letter-spacing:-.04em;color:var(--text)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+    .stack{display:grid;gap:20px}
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:24px;
+      box-shadow:var(--shadow-soft);
+      padding:22px;
+    }
+    .card h2{margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:10px;letter-spacing:-.02em;color:var(--text)}
+    .card h2:before{content:"";width:8px;height:8px;border-radius:999px;background:linear-gradient(135deg,var(--accent),#9fe6b8)}
+    .players{display:flex;flex-wrap:wrap;gap:10px}
+    .player{
+      border:1px solid var(--border);
+      background:var(--panel-2);
+      color:var(--text);
+      border-radius:999px;
+      padding:10px 14px;
+      cursor:pointer;
+      transition:.18s ease;
+      user-select:none;
+      font-size:14px;
+      box-shadow:0 2px 8px rgba(15,23,42,.03);
+    }
+    .player:hover{transform:translateY(-1px);border-color:#cbd5e1}
+    .player.active{
+      background:#eefaf2;
+      color:#157347;
+      border-color:#bfe8cc;
+      font-weight:800;
+    }
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+    button,select,input{border-radius:14px;padding:12px 16px;font-size:15px;transition:.18s ease}
+    button{font-weight:800;cursor:pointer}
+    button:hover{transform:translateY(-1px)}
+    button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    select,input{
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      width:100%;
+      outline:none;
+    }
+    select:focus,input:focus{border-color:#b7d8c1;box-shadow:0 0 0 4px rgba(34,197,94,.08)}
+    input[type="checkbox"]{width:auto}
+    .btn-primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}
+    .btn-secondary{background:#fff;color:var(--text);border:1px solid var(--border)}
+    .btn-danger{background:#fff6f7;color:#b42318;border:1px solid #f4d9dd}
+    .btn-gold{background:#fff8e7;color:#8a6512;border:1px solid #f1e1b0}
+    .btn-small{padding:8px 12px;font-size:13px;border-radius:10px}
+    .muted{color:var(--muted);font-size:14px}
+    .hint{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.45}
+    .badge{
+      display:inline-block;
+      background:#f3f7f4;
+      border:1px solid #d9e8dc;
+      padding:7px 11px;
+      border-radius:999px;
+      font-size:12px;
+      color:#157347;
+      font-weight:800;
+    }
+    .footer-note{margin-top:10px;font-size:13px;color:var(--muted)}
+    .status{margin-top:12px;color:var(--muted);font-size:13px}
+    .ok{color:#157347}.warn{color:#9a6700}.err{color:#b42318}
+    .output-grid,.weekplan{display:grid;gap:14px}
+    .flight{
+      background:linear-gradient(180deg,#ffffff,#fcfdff);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:18px;
+      box-shadow:0 3px 12px rgba(15,23,42,.035);
+    }
+    .flight h3{margin:0 0 10px;font-size:17px;letter-spacing:-.02em;color:var(--text)}
+    .flight-meta{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.45}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+    .chip{
+      background:#fbfcfe;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:14px;
+      color:var(--text);
+    }
+    .chip.winner{background:#ecfdf3;border-color:#abefc6;color:#067647;font-weight:850}
+    .chip.loser{background:#fff1f3;border-color:#fecdd6;color:#b42318;font-weight:850}
+    .chip.lady{background:#fff8e7;border-color:#f1e1b0;color:#8a6512}
+    .score-table{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:13px}
+    .score-table th{color:var(--muted);font-weight:800;text-align:left;padding:7px;text-transform:uppercase;font-size:11px;letter-spacing:.05em}
+    .score-table td{padding:7px;vertical-align:middle;background:#fff;border-top:1px solid #eef2f7;border-bottom:1px solid #eef2f7}
+    .score-table td:first-child{border-left:1px solid #eef2f7;border-radius:12px 0 0 12px}
+    .score-table td:last-child{border-right:1px solid #eef2f7;border-radius:0 12px 12px 0}
+    .score-input{padding:10px;text-align:center;min-width:70px;background:#fff}
+    .hole-card{border:1px solid var(--border);background:#fbfcfe;border-radius:16px;padding:14px;margin-top:10px}
+    .hole-head{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    .live-ranking{margin-top:12px;padding:12px;border-radius:16px;background:#fbfcfe;border:1px solid var(--border)}
+    .live-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #eef2f7;color:var(--text)}
+    .live-row:last-child{border-bottom:0}
+    .match-status{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:16px;
+      background:#ecfdf3;
+      border:1px solid #abefc6;
+      color:#067647;
+      font-weight:850;
+    }
+    .match-status.neutral{background:#f6f8fb;border-color:#e7ebf1;color:#475569}
+    .match-status.warn{background:#fff8e7;border-color:#f1e1b0;color:#8a6512}
+    .winner-tag,.loser-tag,.lady-tag{margin-top:8px;font-size:13px;font-weight:850;padding:8px 10px;border-radius:999px;display:inline-block}
+    .winner-tag{color:#067647;background:#ecfdf3;border:1px solid #abefc6}
+    .loser-tag{color:#b42318;background:#fff1f3;border:1px solid #fecdd6}
+    .lady-tag{color:#8a6512;background:#fff8e7;border:1px solid #f1e1b0}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+    th{background:#fbfcfd;color:var(--muted);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+    tbody tr:nth-child(even) td{background:#fcfdff}
+    tbody tr:hover td{background:#f7fafc}
+    .rank-1 td:first-child{color:var(--gold);font-weight:850}
+    .rank-2 td:first-child{color:#6b7280;font-weight:800}
+    .rank-3 td:first-child{color:#b45309;font-weight:800}
+    .filters{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-bottom:12px}
+    .chart-wrap{height:320px}
+    canvas{width:100%!important;height:100%!important}
+    .checkbox-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+    .check-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid var(--border);border-radius:14px;background:#fff}
+    @media(max-width:980px){
+      .hero,.grid{grid-template-columns:1fr}
+      .hero-right{grid-template-columns:1fr 1fr}
+      .filters{grid-template-columns:1fr}
+      .checkbox-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:560px){
+      .wrap{padding:14px}
+      .title{font-size:26px}
+      .hero-right{grid-template-columns:1fr}
+      .brand{align-items:flex-start}
+      .brand img{height:82px}
+      .score-table{font-size:12px}
+      .score-input{min-width:54px;padding:9px 6px}
+      .card{padding:17px}
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <div class="badge">Elite+ Dashboard</div>
+        <div class="brand">
+          <img src="logo.png" alt="Logo">
+          <div>
+            <h1 class="title">Herrengolf Kosaido</h1>
+            <p class="sub">Flightgenerator, Netto-Stableford, Matchplay-Wertung, Saisonranking und Cloud-Historie.</p>
+            <p class="footer-note" id="today"></p>
+            <p class="status" id="cloudStatus">Verbinde mit Cloud …</p>
+          </div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="stat"><div class="k">Ausgewählte Spieler</div><div class="v" id="countSelected">0</div></div>
+        <div class="stat"><div class="k">Cloud-Runden</div><div class="v" id="countRounds">0</div></div>
+        <div class="stat"><div class="k">Gewertete Flights</div><div class="v" id="countFlights">0</div></div>
+        <div class="stat"><div class="k">Aufteilung</div><div class="v" style="font-size:16px;line-height:1.3" id="layoutInfo">–</div></div>
+      </div>
+    </section>
 
-<div class="card">
-<h2>Herrengolf FINAL ELITE</h2>
-<div id="players"></div>
-<button onclick="generateRound()">Runde generieren</button>
-</div>
+    <div class="grid">
+      <div class="stack">
+        <section class="card">
+          <h2>Spieler auswählen</h2>
+          <div class="players" id="players"></div>
+          <div class="toolbar">
+            <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
+            <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
+            <button class="btn-secondary" id="allBtn">Alle auswählen</button>
+            <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
+            <button class="btn-danger" id="resetBtn">♻️ Elite+ Cloud löschen</button>
+          </div>
+          <div class="hint">Runde generieren speichert den sichtbaren Wochen-Spielplan und öffnet danach direkt die Score-Eingabe.</div>
+        </section>
 
-<div class="card">
-<h2>Scores (Stableford)</h2>
-<div id="scores"></div>
-<button onclick="finishRound()">Runde abschließen</button>
-</div>
+        <section class="card">
+          <h2>Ranking</h2>
+          <table>
+            <thead><tr><th>Platz</th><th>Spieler</th><th>Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr></thead>
+            <tbody id="rankingBody"></tbody>
+          </table>
+        </section>
+      </div>
 
-<div class="card">
-<h2>Runden</h2>
-<div id="rounds"></div>
-</div>
+      <div class="stack">
+        <section class="card">
+          <h2>Wochen-Spielplan</h2>
+          <div id="weekPlanOutput" class="weekplan"><div class="muted">Noch kein Spielplan erstellt.</div></div>
+          <div class="hint">Der Vorschlag wird automatisch aktualisiert und ist die nächste Runde.</div>
+        </section>
 
-<div class="card">
-<h2>Ranking</h2>
-<div id="ranking"></div>
-</div>
-
-<script>
-
-// ===== CONFIG FIREBASE (OPTIONAL) =====
-// -> hier deine Firebase Config einfügen falls benötigt
-
-// ===== CORE =====
-const getFlights = r => r?.flights ? Object.values(r.flights) : [];
-const getPlayers = f => Array.isArray(f?.players) ? f.players : [];
-
-// ===== GAME LOGIC =====
-function stableford(par, strokes){
-  const diff = strokes - par;
-  if(diff <= -3) return 5;
-  if(diff == -2) return 4;
-  if(diff == -1) return 3;
-  if(diff == 0) return 2;
-  if(diff == 1) return 1;
-  return 0;
-}
-
-// ===== STATE =====
-const allPlayers = ["Carl","Luci","Dolli","Jörg","Martin","Sascha","Markus"];
-const handicaps = {Carl:10,Luci:18,Dolli:20,Jörg:12,Martin:15,Sascha:22,Markus:25};
-
-let selected = [];
-let rounds = JSON.parse(localStorage.getItem("rounds")||"[]");
-let currentRound = null;
-
-// ===== UI =====
-function renderPlayers(){
-  players.innerHTML = allPlayers.map(p=>`
-    <span class="player ${selected.includes(p)?"selected":""}" onclick="toggle('${p}')">${p} (HCP ${handicaps[p]})</span>
-  `).join("");
-}
-
-function toggle(p){
-  selected.includes(p)
-    ? selected = selected.filter(x=>x!==p)
-    : selected.push(p);
-  renderPlayers();
-}
-
-// ===== GENERATE =====
-function generateRound(){
-  if(selected.length<3) return alert("mind. 3 Spieler");
-
-  const shuffled=[...selected].sort(()=>Math.random()-0.5);
-
-  currentRound = {
-    date:new Date().toLocaleDateString(),
-    ntpHole:[2,6,8][Math.floor(Math.random()*3)],
-    ntpWinner:"",
-    flights:{
-      f1:{players:shuffled,scores:{}}
-    }
-  };
-
-  renderScores();
-}
-
-// ===== SCORING =====
-function renderScores(){
-  if(!currentRound) return;
-
-  const f = getFlights(currentRound)[0];
-  const players = getPlayers(f);
-
-  scores.innerHTML = players.map(p=>`
-    <div>${p}: <input type="number" placeholder="Schläge" onchange="setScore('${p}',this.value)"></div>
-  `).join("");
-}
-
-function setScore(player,val){
-  const f = getFlights(currentRound)[0];
-  f.scores[player] = Number(val);
-}
-
-// ===== FINISH =====
-function finishRound(){
-  const f = getFlights(currentRound)[0];
-  const players = getPlayers(f);
-
-  const results = players.map(p=>{
-    const gross = f.scores[p] || 0;
-    const hcp = Math.round(handicaps[p]/3);
-    const net = gross - hcp;
-
-    return {
-      player:p,
-      gross,
-      net,
-      grossSF: stableford(4,gross),
-      netSF: stableford(4,net)
-    };
-  });
-
-  // Netto winner
-  results.sort((a,b)=>b.netSF-a.netSF);
-  f.winner = results[0].player;
-
-  // Brutto winner
-  results.sort((a,b)=>b.grossSF-a.grossSF);
-  f.grossWinner = results[0].player;
-
-  rounds.unshift(currentRound);
-  localStorage.setItem("rounds",JSON.stringify(rounds));
-
-  currentRound=null;
-  renderAll();
-}
-
-// ===== RENDER =====
-function renderRounds(){
-  roundsEl.innerHTML = rounds.map(r=>`
-    <div class="card">
-      ${r.date}<br>
-      🎯 NTP Loch ${r.ntpHole}<br>
-      ${getFlights(r).map(f=>`
-        Flight: ${getPlayers(f).join(", ")}<br>
-        🟢 Netto: ${f.winner}<br>
-        🔵 Brutto: ${f.grossWinner}
-      `).join("")}
+        <section class="card">
+          <h2>Flights & Ergebnisse</h2>
+          <div id="output" class="output-grid"><div class="muted">Noch keine Runde erzeugt.</div></div>
+        </section>
+      </div>
     </div>
-  `).join("");
-}
 
-// ===== RANKING =====
-function renderRanking(){
-  const stats = {};
-  allPlayers.forEach(p=>stats[p]={net:0,gross:0});
+    <div class="grid" style="margin-top:20px">
+      <section class="card">
+        <h2>Spieler-Statistik</h2>
+        <table>
+          <thead><tr><th>Spieler</th><th>Runden</th><th>Siege</th><th>Niederlagen</th><th>Ø Netto-SF</th><th>Lochpunkte</th><th>Ladys</th></tr></thead>
+          <tbody id="playerStatsBody"></tbody>
+        </table>
+      </section>
 
-  rounds.forEach(r=>{
-    getFlights(r).forEach(f=>{
-      if(stats[f.winner]) stats[f.winner].net++;
-      if(stats[f.grossWinner]) stats[f.grossWinner].gross++;
-    });
-  });
+      <section class="card">
+        <h2>Spezialtitel</h2>
+        <table>
+          <thead><tr><th>Titel</th><th>Spieler</th><th>Wert</th></tr></thead>
+          <tbody id="titlesBody"></tbody>
+        </table>
+      </section>
+    </div>
 
-  ranking.innerHTML = Object.entries(stats)
-    .sort((a,b)=>b[1].net-a[1].net)
-    .map(([p,s])=>`${p} | Netto:${s.net} | Brutto:${s.gross}`)
-    .join("<br>");
-}
+    <div class="grid" style="margin-top:20px">
+      <section class="card">
+        <h2>Diagramm: Siege & Niederlagen</h2>
+        <div class="chart-wrap"><canvas id="winsLossesChart"></canvas></div>
+      </section>
+      <section class="card">
+        <h2>Diagramm: Netto-Stableford Ø</h2>
+        <div class="chart-wrap"><canvas id="pointsChart"></canvas></div>
+      </section>
+    </div>
 
-// ===== INIT =====
-function renderAll(){
-  renderPlayers();
-  renderRounds();
-  renderRanking();
-}
+    <div class="grid" style="margin-top:20px">
+      <section class="card">
+        <h2>Flight-Statistik</h2>
+        <table><thead><tr><th>Flight</th><th>Wie oft gewertet</th></tr></thead><tbody id="flightStatsBody"></tbody></table>
+      </section>
+      <section class="card">
+        <h2>Ergebnisse Historie</h2>
+        <table><thead><tr><th>Datum</th><th>Flight</th><th>Gewinner</th><th>Verlierer</th><th>Netto-SF</th></tr></thead><tbody id="historyBody"></tbody></table>
+      </section>
+    </div>
 
-renderAll();
+    <section class="card" style="margin-top:20px">
+      <h2>Verlauf pro Spieler</h2>
+      <div class="filters">
+        <select id="historyPlayerFilter"></select>
+        <button class="btn-secondary" id="clearHistoryFilterBtn">Filter zurücksetzen</button>
+      </div>
+      <table><thead><tr><th>Datum</th><th>Flight</th><th>Rolle</th><th>Netto-SF</th><th>Lochpunkte</th></tr></thead><tbody id="playerHistoryBody"></tbody></table>
+    </section>
 
-</script>
+    <section class="card" style="margin-top:20px">
+      <h2>Handicaps</h2>
+      <table><thead><tr><th>Spieler</th><th>HCP</th><th>Aktion</th></tr></thead><tbody id="handicapBody"></tbody></table>
+      <div class="hint">Handicaps werden für die Netto-Wertung relativ zum besten Handicap im Flight berechnet.</div>
+    </section>
+  </div>
 
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, addDoc, query, orderBy, serverTimestamp, writeBatch, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAODae-cw89uBzGlYbJJH_xmxs_gqYGl-k",
+      authDomain: "herrengolf-kosaido.firebaseapp.com",
+      projectId: "herrengolf-kosaido",
+      storageBucket: "herrengolf-kosaido.firebasestorage.app",
+      messagingSenderId: "755587813680",
+      appId: "1:755587813680:web:bf2fc6215ef75e954478f5",
+      measurementId: "G-TF68EQCGJS"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const ROUNDS_COLLECTION = "elite_rounds_v1";
+
+    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi","Markus","Georgi","Matti"];
+    const defaultHandicaps = {
+      "Luci": 11.0, "Dolli": 16.7, "Dickie": 21.2, "Thomas Wimmer": 19.7, "Thomas Schneider": 21.0,
+      "Jörg": 25.0, "Martin": 18.4, "Carsten": 15.7, "Felix": 15.2, "Carl": 10.5, "Sascha": 19.7, "Adi": 19.2
+    };
+    const courseHoles = [
+      { hole:1, par:5, index:4 }, { hole:2, par:3, index:7 }, { hole:3, par:4, index:1 },
+      { hole:4, par:4, index:3 }, { hole:5, par:4, index:5 }, { hole:6, par:3, index:8 },
+      { hole:7, par:4, index:6 }, { hole:8, par:3, index:9 }, { hole:9, par:4, index:2 }
+    ];
+
+    const excelImportedResults = [
+      { date:"08.10.2025", winners:["Markus"], losers:["Georgi"], ladies:[] },
+      { date:"15.10.2025", winners:["Georgi"], losers:[], ladies:[] },
+      { date:"22.10.2025", winners:["Carl"], losers:["Luci"], ladies:[] },
+      { date:"29.10.2025", winners:["Carl"], losers:["Martin"], ladies:["Luci"] },
+      { date:"12.11.2025", winners:["Carl"], losers:["Sascha"], ladies:["Sascha"] },
+      { date:"19.11.2025", winners:["Carl"], losers:["Georgi"], ladies:[] },
+      { date:"26.11.2025", winners:["Carl"], losers:["Sascha"], ladies:[] },
+      { date:"03.12.2025", winners:["Carl"], losers:["Sascha"], ladies:[] },
+      { date:"09.12.2025", winners:["Carl"], losers:["Sascha","Markus"], ladies:[] },
+      { date:"13.12.2025", winners:["Dolli"], losers:["Markus"], ladies:[] },
+      { date:"17.12.2025", winners:["Carl"], losers:["Luci"], ladies:[] },
+      { date:"21.12.2025", winners:["Carl"], losers:["Markus"], ladies:[] },
+      { date:"03.01.2026", winners:["Luci"], losers:["Dolli"], ladies:[] },
+      { date:"30.01.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
+      { date:"04.03.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
+      { date:"12.03.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
+      { date:"12.03.2026", winners:["Matti"], losers:["Markus"], ladies:[] },
+      { date:"18.03.2026", winners:["Luci"], losers:["Sascha"], ladies:[] },
+      { date:"18.03.2026", winners:["Martin"], losers:["Thomas Wimmer"], ladies:[] },
+      { date:"01.04.2026", winners:["Luci"], losers:["Dolli"], ladies:["Martin"] },
+      { date:"15.04.2026", winners:["Sascha"], losers:["Thomas Schneider"], ladies:["Jörg"] },
+      { date:"15.04.2026", winners:["Carl"], losers:["Markus"], ladies:["Thomas Schneider"] }
+    ];
+
+    function buildImportedRounds(){
+      return excelImportedResults.map((entry,index)=>{
+        const players=[...new Set([...(entry.winners||[]), ...(entry.losers||[]), ...(entry.ladies||[])])];
+        const winnerText=(entry.winners||[]).join(", ");
+        const loserText=(entry.losers||[]).join(", ");
+        return {
+          id:`excel_import_${index+1}`,
+          date:entry.date,
+          imported:true,
+          flights:{
+            flight1:{
+              players,
+              winner:winnerText,
+              winners:entry.winners||[],
+              loser:loserText,
+              losers:entry.losers||[],
+              ladies:entry.ladies||[],
+              saved:true,
+              imported:true,
+              totals:Object.fromEntries(players.map(p=>[p,{lochpunkte:(entry.winners||[]).includes(p)?1:0}]))
+            }
+          }
+        };
+      });
+    }
+
+    let selected = new Set();
+    let rounds = [];
+    let handicaps = {};
+    let plannedGroups = null;
+    let selectedHistoryPlayer = "";
+    let adminUnlocked = {};
+    let localScores = {};
+    let winsLossesChart = null;
+    let pointsChart = null;
+
+    document.getElementById("today").innerText = new Date().toLocaleDateString("de-DE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+
+    function setCloudStatus(text, cls=""){ const el=document.getElementById("cloudStatus"); el.className="status "+cls; el.textContent=text; }
+    function cssSafe(value){ return value.replaceAll(" ","_").replaceAll(".","_").replaceAll("ä","ae").replaceAll("ö","oe").replaceAll("ü","ue").replaceAll("ß","ss"); }
+    function normalizeFlight(group){ return [...group].sort((a,b)=>a.localeCompare(b,"de")).join(" | "); }
+    function handicapValue(name){ const v=handicaps[name]; return typeof v==="number" && !Number.isNaN(v) ? v : null; }
+    function roundedHcp(name){ const v=handicapValue(name); return v===null ? 0 : Math.round(v); }
+
+    function getLayout(count){
+      if(count<3) return [];
+      if(count===3) return [3]; if(count===4) return [4]; if(count===5) return [3,2]; if(count===6) return [3,3];
+      if(count===7) return [4,3]; if(count===8) return [4,4]; if(count===9) return [4,3,2]; if(count===10) return [4,3,3]; if(count===11) return [4,4,3];
+      const layout=[]; let rest=count; while(rest>11){ layout.push(4); rest-=4; } return layout.concat(getLayout(rest));
+    }
+    function formatLayout(layout){ return layout.length ? layout.join(" + ") : "–"; }
+
+    function shuffle(array){
+      const arr=[...array];
+      for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+      return arr;
+    }
+    function buildGroups(players, layout){ let idx=0; return layout.map(size => players.slice(idx, idx+=size)); }
+    function groupHcpAvg(group){ const vals=group.map(handicapValue).filter(v=>v!==null); return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null; }
+    function hcpPenalty(groups){
+      const avgs=groups.map(groupHcpAvg).filter(v=>v!==null);
+      if(avgs.length<2) return 0;
+      return Math.pow(Math.max(...avgs)-Math.min(...avgs),2)*0.4;
+    }
+    function flightHistoryCount(group){
+      return rounds.flatMap(r=>Object.values(r.flights||{})).filter(f=>normalizeFlight(f.players||[])===normalizeFlight(group)).length;
+    }
+    function createGroups(players){
+      const layout=getLayout(players.length);
+      let best=Infinity, candidates=[];
+      for(let a=0;a<5000;a++){
+        const groups=buildGroups(shuffle(players), layout);
+        const score=groups.reduce((s,g)=>s+flightHistoryCount(g),0)+hcpPenalty(groups);
+        if(score<best){ best=score; candidates=[groups]; }
+        else if(score<=best+0.75){ candidates.push(groups); }
+      }
+      return candidates[Math.floor(Math.random()*candidates.length)] || buildGroups(shuffle(players), layout);
+    }
+
+    function relativeHcpMap(group){
+      const vals=group.map(name=>({name,hcp:roundedHcp(name)}));
+      const min=Math.min(...vals.map(v=>v.hcp));
+      return Object.fromEntries(vals.map(v=>[v.name,Math.max(0,v.hcp-min)]));
+    }
+    function strokesForHole(relativeHcp, index){
+      const base=Math.floor(relativeHcp/9);
+      const rest=relativeHcp%9;
+      return base + (index<=rest ? 1 : 0);
+    }
+    function stableford(par, score){
+      const d=score-par;
+      if(d<=-3) return 5; if(d===-2) return 4; if(d===-1) return 3; if(d===0) return 2; if(d===1) return 1; return 0;
+    }
+    function emptyScores(group){ return Object.fromEntries(group.map(p=>[p,Object.fromEntries(courseHoles.map(h=>[String(h.hole),""]))])); }
+
+    function getScores(roundId, flightKey, flight){
+      const key=roundId+"__"+flightKey;
+      if(!localScores[key]) localScores[key]=JSON.parse(JSON.stringify(flight.scores || emptyScores(flight.players)));
+      return localScores[key];
+    }
+    function setScore(roundId, flightKey, player, hole, value){
+      const round=rounds.find(r=>r.id===roundId); if(!round) return;
+      const flight=round.flights[flightKey]; const scores=getScores(roundId, flightKey, flight);
+      const n=Number(value);
+      scores[player][String(hole)] = Number.isFinite(n) && n>0 ? n : "";
+      renderRound(round);
+    }
+    window.setScore=setScore;
+
+    function computeFlight(flight, scores){
+      const group=flight.players;
+      const rel=relativeHcpMap(group);
+      const totals=Object.fromEntries(group.map(p=>[p,{grossSF:0,netSF:0,lochpunkte:0,grossStrokes:0,netStrokes:0}]));
+      const holes=[];
+      for(const hole of courseHoles){
+        const entries=group.map(player=>{
+          const gross=Number(scores?.[player]?.[String(hole.hole)] || 0);
+          const strokes=strokesForHole(rel[player]||0, hole.index);
+          const complete=gross>0;
+          const netScore=complete ? gross-strokes : null;
+          const grossSF=complete ? stableford(hole.par,gross) : null;
+          const netSF=complete ? stableford(hole.par,netScore) : null;
+          return {player,gross,strokes,netScore,grossSF,netSF,complete};
+        });
+        const complete=entries.every(e=>e.complete);
+        let winners=[], status="";
+        if(complete){
+          const best=Math.max(...entries.map(e=>e.netSF));
+          winners=entries.filter(e=>e.netSF===best).map(e=>e.player);
+          entries.forEach(e=>{
+            totals[e.player].grossSF += e.grossSF;
+            totals[e.player].netSF += e.netSF;
+            totals[e.player].grossStrokes += e.gross;
+            totals[e.player].netStrokes += e.netScore;
+          });
+          winners.forEach(w=>totals[w].lochpunkte += 1);
+          status = winners.length===1
+            ? `${winners[0]} gewinnt Loch ${hole.hole} mit ${best} Netto-SF`
+            : `Loch ${hole.hole} geteilt: ${winners.join(", ")} je 1 Lochpunkt`;
+        }
+        holes.push({...hole, entries, complete, winners, status});
+      }
+      const ranking=group.map(player=>({player,...totals[player]})).sort((a,b)=>
+        (b.netSF-a.netSF) ||
+        (b.lochpunkte-a.lochpunkte) ||
+        (b.grossSF-a.grossSF) ||
+        (a.netStrokes-b.netStrokes) ||
+        (roundedHcp(b.player)-roundedHcp(a.player)) ||
+        a.player.localeCompare(b.player,"de")
+      );
+      const completeHoles=holes.filter(h=>h.complete).length;
+      const nextHole=holes.find(h=>!h.complete)?.hole || 9;
+      return {
+        holes, totals, ranking, completeHoles,
+        allComplete: completeHoles===9,
+        winner: ranking[0]?.player || "",
+        loser: ranking[ranking.length-1]?.player || "",
+        nextHole
+      };
+    }
+
+    function matchStatus(computed){
+      if(computed.completeHoles===0 || computed.ranking.length<2) return {text:"Noch kein Matchplay-Stand.",cls:"neutral"};
+      const a=computed.ranking[0], b=computed.ranking[1];
+      const diff=a.lochpunkte-b.lochpunkte;
+      const remaining=9-computed.completeHoles;
+      if(diff===0) return {text:`${a.player} und ${b.player} all square`,cls:"neutral"};
+      if(diff>remaining) return {text:`${a.player} dormie ${diff}`,cls:"warn"};
+      return {text:`${a.player} ${diff} auf gegen ${b.player}`,cls:""};
+    }
+
+    function updateTopStats(){
+      document.getElementById("countSelected").innerText=selected.size;
+      document.getElementById("countRounds").innerText=rounds.length;
+      document.getElementById("countFlights").innerText=rounds.flatMap(r=>Object.values(r.flights||{})).filter(f=>f.saved).length;
+      document.getElementById("layoutInfo").innerText=formatLayout(getLayout(selected.size));
+    }
+    function renderPlayers(){
+      document.getElementById("players").innerHTML=allPlayers.map(name=>{
+        const h=handicapValue(name);
+        return `<button type="button" class="player ${selected.has(name)?'active':''}" onclick="togglePlayer('${name.replace(/'/g,"\\'")}')">${name}${h!==null?` (${h.toFixed(1)})`:""}</button>`;
+      }).join("");
+      updateTopStats();
+    }
+    window.togglePlayer=(name)=>{ selected.has(name)?selected.delete(name):selected.add(name); updatePlan(); renderPlayers(); };
+
+    function updatePlan(){
+      const players=[...selected];
+      if(players.length<3){ plannedGroups=null; renderWeekPlan([]); return; }
+      plannedGroups=createGroups(players);
+      renderWeekPlan(plannedGroups);
+    }
+    function renderWeekPlan(groups){
+      const el=document.getElementById("weekPlanOutput");
+      if(!groups?.length){ el.innerHTML='<div class="muted">Noch kein Spielplan erstellt.</div>'; return; }
+      el.innerHTML=groups.map((g,i)=>`
+        <div class="flight">
+          <h3>Vorschlag ${i+1}</h3>
+          <div class="chips">${g.map(p=>`<span class="chip">${p}</span>`).join("")}</div>
+          <div class="flight-meta">Ø Handicap: ${groupHcpAvg(g)?.toFixed(1) || "offen"}</div>
+        </div>`).join("");
+    }
+
+    function renderRound(round){
+      if(!round){ document.getElementById("output").innerHTML='<div class="muted">Noch keine Runde erzeugt.</div>'; return; }
+      const flights=Object.entries(round.flights||{});
+      document.getElementById("output").innerHTML=flights.map(([flightKey,flight],idx)=>{
+        const scores=getScores(round.id, flightKey, flight);
+        const computed=computeFlight(flight,scores);
+        const unlocked=!!adminUnlocked[round.id+"__"+flightKey];
+        const visibleHole=Math.max(1, computed.nextHole);
+        const ms=matchStatus(computed);
+        return `
+          <div class="flight">
+            <h3>Flight ${idx+1}</h3>
+            <div class="chips">${flight.players.map(p=>`<span class="chip ${computed.allComplete && computed.winner===p?'winner':''} ${computed.allComplete && computed.loser===p?'loser':''} ${(flight.ladies||[]).includes(p)?'lady':''}">${p}</span>`).join("")}</div>
+            <div class="flight-meta">Netto-Stableford ist Hauptwertung. Lochpunkt: höchster Netto-SF pro Loch; bei Gleichstand erhalten alle Punkt.</div>
+            <div class="winner-box">
+              <div class="hint" style="margin:0">Scoreeingabe ist passwortgeschützt.</div>
+              <button class="btn-secondary" onclick="unlockFlight('${round.id}','${flightKey}')">${unlocked?'🔓 Freigeschaltet':'🔐 Scoreeingabe freischalten'}</button>
+            </div>
+
+            ${courseHoles.slice(0,visibleHole).map(hole=>{
+              const h=computed.holes[hole.hole-1];
+              return `<div class="hole-card">
+                <div class="hole-head">
+                  <strong>Loch ${hole.hole}</strong>
+                  <span class="badge">Par ${hole.par} · Index ${hole.index} · ${h.complete?'erfasst':'offen'}</span>
+                </div>
+                <table class="score-table">
+                  <thead><tr><th>Spieler</th><th>Schläge</th><th>Vorgabe</th><th>Brutto SF</th><th>Netto SF</th></tr></thead>
+                  <tbody>${flight.players.map(p=>{
+                    const e=h.entries.find(x=>x.player===p);
+                    return `<tr>
+                      <td>${p}</td>
+                      <td><input class="score-input" type="number" min="1" inputmode="numeric" ${unlocked?'':'disabled'} value="${scores[p]?.[String(hole.hole)]||''}" onchange="setScore('${round.id}','${flightKey}','${p.replace(/'/g,"\\'")}',${hole.hole},this.value)"></td>
+                      <td>${e.strokes}</td><td>${e.grossSF ?? '-'}</td><td>${e.netSF ?? '-'}</td>
+                    </tr>`;
+                  }).join("")}</tbody>
+                </table>
+                <div class="live-ranking">${h.complete?`<strong>${h.status}</strong>`:'<span class="muted">Nächstes Loch öffnet sich nach vollständiger Eingabe.</span>'}</div>
+              </div>`;
+            }).join("")}
+
+            <div class="live-ranking">
+              <div class="live-row"><strong>Aktueller Stand</strong><strong>${computed.completeHoles}/9 Löcher</strong></div>
+              ${computed.ranking.map((r,i)=>`<div class="live-row"><span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i===computed.ranking.length-1?'💀':''} ${r.player}</span><strong>Netto-SF ${r.netSF} · LP ${r.lochpunkte}</strong></div>`).join("")}
+            </div>
+            <div class="match-status ${ms.cls}">${ms.text}</div>
+            <div class="checkbox-grid">
+              ${flight.players.map(p=>`<label class="check-item"><input type="checkbox" ${unlocked?'':'disabled'} ${(flight.ladies||[]).includes(p)?'checked':''} onchange="toggleLady('${round.id}','${flightKey}','${p.replace(/'/g,"\\'")}')"><span>Lady: ${p}</span></label>`).join("")}
+            </div>
+            <div class="winner-box">
+              <div class="hint" style="margin:0">${computed.allComplete?`Berechnet: Sieger ${computed.winner}, Verlierer ${computed.loser}.`:'Speichern erst nach 9 vollständigen Löchern möglich.'}</div>
+              <button class="btn-gold" ${computed.allComplete && unlocked?'':'disabled'} onclick="saveFlight('${round.id}','${flightKey}')">💾 Flight speichern</button>
+            </div>
+            ${flight.saved?`<div class="winner-tag">Gespeichert: ${flight.winner}</div><div class="loser-tag">Verlierer: ${flight.loser}</div>`:''}
+            ${(flight.ladies||[]).length?`<div class="lady-tag">Gespielte Ladys: ${(flight.ladies||[]).join(", ")}</div>`:''}
+          </div>`;
+      }).join("");
+    }
+
+    window.unlockFlight=(roundId,flightKey)=>{ const pw=prompt("Admin-Code eingeben:"); if(pw!=="Kosaido"){alert("Kein Zugriff");return;} adminUnlocked[roundId+"__"+flightKey]=true; renderRound(rounds.find(r=>r.id===roundId)); };
+    window.toggleLady=(roundId,flightKey,player)=>{ const round=rounds.find(r=>r.id===roundId); const f=round.flights[flightKey]; f.ladies=f.ladies||[]; f.ladies.includes(player)?f.ladies=f.ladies.filter(x=>x!==player):f.ladies.push(player); renderRound(round); };
+
+    window.saveFlight=async(roundId,flightKey)=>{
+      const round=rounds.find(r=>r.id===roundId); const flight=round.flights[flightKey];
+      const scores=getScores(roundId,flightKey,flight); const computed=computeFlight(flight,scores);
+      if(!computed.allComplete){ alert("Bitte alle 9 Löcher vollständig eintragen."); return; }
+      const cleanScores=Object.fromEntries(flight.players.map(p=>[p,Object.fromEntries(courseHoles.map(h=>[String(h.hole), Number(scores[p][String(h.hole)] || 0)]))]));
+      const updatedFlight={
+        players: flight.players,
+        scores: cleanScores,
+        ladies: flight.ladies || [],
+        winner: computed.winner,
+        loser: computed.loser,
+        saved: true,
+        totals: Object.fromEntries(computed.ranking.map(r=>[r.player,{netSF:r.netSF,grossSF:r.grossSF,lochpunkte:r.lochpunkte,netStrokes:r.netStrokes,grossStrokes:r.grossStrokes}])),
+        holes: Object.fromEntries(computed.holes.map(h=>[String(h.hole),{winners:h.winners,status:h.status}]))
+      };
+      const nextFlights={...round.flights,[flightKey]:updatedFlight};
+      try{
+        setCloudStatus("Speichere Flight …","warn");
+        await updateDoc(doc(db,ROUNDS_COLLECTION,roundId),{flights:nextFlights});
+        round.flights=nextFlights;
+        delete localScores[roundId+"__"+flightKey];
+        await loadRounds();
+        renderRound(rounds.find(r=>r.id===roundId));
+        setCloudStatus("Flight gespeichert.","ok");
+      }catch(e){ console.error(e); alert("Speichern fehlgeschlagen."); setCloudStatus("Speichern fehlgeschlagen.","err"); }
+    };
+
+    function asList(value){
+      if(Array.isArray(value)) return value.filter(Boolean);
+      if(typeof value === "string" && value.trim()) return value.split(",").map(x=>x.trim()).filter(Boolean);
+      return [];
+    }
+
+    function calcStats(){
+      const stats=Object.fromEntries(allPlayers.map(p=>[p,{rounds:0,wins:0,losses:0,ladies:0,totalNetSF:0,netSFRounds:0,lochpunkte:0}]));
+      const ensurePlayer=(p)=>{ if(p && !stats[p]) stats[p]={rounds:0,wins:0,losses:0,ladies:0,totalNetSF:0,netSFRounds:0,lochpunkte:0}; };
+      const flightStats={};
+      const history=[];
+      rounds.forEach(round=>{
+        Object.values(round.flights||{}).forEach(f=>{
+          if(!f.saved) return;
+          const winners=asList(f.winners).length ? asList(f.winners) : asList(f.winner);
+          const losers=asList(f.losers).length ? asList(f.losers) : asList(f.loser);
+          const ladies=asList(f.ladies);
+          const players=[...new Set([...(f.players||[]), ...winners, ...losers, ...ladies])].filter(p=>p && p!=="Unbekannt");
+          players.forEach(ensurePlayer);
+          flightStats[normalizeFlight(players)] = (flightStats[normalizeFlight(players)]||0)+1;
+          players.forEach(p=>{
+            stats[p].rounds++;
+            const netSF=f.totals?.[p]?.netSF;
+            if(typeof netSF === "number" && Number.isFinite(netSF)){
+              stats[p].totalNetSF += netSF;
+              stats[p].netSFRounds++;
+            }
+            stats[p].lochpunkte += Number(f.totals?.[p]?.lochpunkte || 0);
+          });
+          winners.forEach(p=>{ ensurePlayer(p); stats[p].wins++; });
+          losers.forEach(p=>{ ensurePlayer(p); stats[p].losses++; });
+          ladies.forEach(p=>{ ensurePlayer(p); stats[p].ladies++; });
+          history.push({date:round.date,flight:players,winner:winners.join(", "),winners,loser:losers.join(", "),losers,totals:f.totals||{},imported:!!f.imported||!!round.imported});
+        });
+      });
+      return {stats,flightStats,history};
+    }
+
+    function renderStats(){
+      const {stats,flightStats,history}=calcStats();
+      const rows=Object.entries(stats).sort((a,b)=>b[1].wins-a[1].wins || b[1].totalNetSF-a[1].totalNetSF || a[0].localeCompare(b[0],"de"));
+      document.getElementById("rankingBody").innerHTML=rows.map(([p,s],i)=>`<tr class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}"><td>${i+1}</td><td>${p}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.rounds}</td><td>${s.rounds?Math.round(s.wins/s.rounds*100):0}%</td></tr>`).join("");
+      document.getElementById("playerStatsBody").innerHTML=Object.entries(stats).map(([p,s])=>`<tr><td>${p}</td><td>${s.rounds}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.netSFRounds?(s.totalNetSF/s.netSFRounds).toFixed(1):"–"}</td><td>${s.lochpunkte}</td><td>${s.ladies}</td></tr>`).join("");
+      const ladyKing=Object.entries(stats).sort((a,b)=>b[1].ladies-a[1].ladies)[0];
+      const underdog=Object.entries(stats).sort((a,b)=>b[1].losses-a[1].losses)[0];
+      document.getElementById("titlesBody").innerHTML=`<tr><td>👑 Lady King</td><td>${ladyKing?.[0]||"-"}</td><td>${ladyKing?.[1]?.ladies||0}</td></tr><tr><td>💀 Underdog</td><td>${underdog?.[0]||"-"}</td><td>${underdog?.[1]?.losses||0}</td></tr>`;
+      document.getElementById("flightStatsBody").innerHTML=Object.entries(flightStats).sort((a,b)=>b[1]-a[1]).map(([f,c])=>`<tr><td>${f}</td><td>${c}x</td></tr>`).join("") || '<tr><td colspan="2" class="muted">Noch keine Daten.</td></tr>';
+      document.getElementById("historyBody").innerHTML=history.slice().reverse().map(h=>`<tr><td>${h.date}</td><td>${h.flight.join(", ")}</td><td>${h.winner}</td><td>${h.loser}</td><td>${h.totals[h.winner]?.netSF ?? "-"}</td></tr>`).join("") || '<tr><td colspan="5" class="muted">Noch keine Historie.</td></tr>';
+      renderPlayerHistory();
+      updateTopStats();
+      renderCharts(stats);
+    }
+
+    function renderPlayerHistory(){
+      const {history}=calcStats(); const filter=selectedHistoryPlayer;
+      const rows=[];
+      history.forEach(h=>{
+        h.flight.forEach(p=>{
+          if(filter && p!==filter) return;
+          const role=(h.winners||[]).includes(p)?"Gewinner":(h.losers||[]).includes(p)?"Verlierer":"Mitgespielt";
+          rows.push(`<tr><td>${h.date}</td><td>${h.flight.join(", ")}</td><td>${p}: ${role}</td><td>${h.totals[p]?.netSF ?? "-"}</td><td>${h.totals[p]?.lochpunkte ?? "-"}</td></tr>`);
+        });
+      });
+      document.getElementById("playerHistoryBody").innerHTML=rows.reverse().join("") || '<tr><td colspan="5" class="muted">Noch keine Daten.</td></tr>';
+    }
+
+    function renderHistoryFilter(){
+      document.getElementById("historyPlayerFilter").innerHTML='<option value="">Alle Spieler</option>'+allPlayers.map(p=>`<option value="${p}" ${selectedHistoryPlayer===p?'selected':''}>${p}</option>`).join("");
+    }
+
+    function renderCharts(stats){
+      const labels=allPlayers;
+      if(winsLossesChart) winsLossesChart.destroy();
+      if(pointsChart) pointsChart.destroy();
+      const options={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#667085"}}},scales:{x:{ticks:{color:"#667085"},grid:{color:"#eef2f7"}},y:{beginAtZero:true,ticks:{color:"#667085"},grid:{color:"#eef2f7"}}}};
+      winsLossesChart=new Chart(document.getElementById("winsLossesChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Siege",data:labels.map(p=>stats[p].wins)},{label:"Niederlagen",data:labels.map(p=>stats[p].losses)}]},options});
+      pointsChart=new Chart(document.getElementById("pointsChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Ø Netto-SF",data:labels.map(p=>stats[p].netSFRounds?+(stats[p].totalNetSF/stats[p].netSFRounds).toFixed(1):0)}]},options});
+    }
+
+    async function loadHandicaps(){
+      try{
+        const snap=await getDoc(doc(db,"meta","handicaps"));
+        handicaps=snap.exists()?{...defaultHandicaps,...(snap.data().values||{})}:{...defaultHandicaps};
+        if(!snap.exists()) await setDoc(doc(db,"meta","handicaps"),{values:handicaps});
+      }catch(e){ console.error(e); handicaps={...defaultHandicaps}; }
+      renderPlayers(); renderHandicaps();
+    }
+    function renderHandicaps(){
+      document.getElementById("handicapBody").innerHTML=allPlayers.map(p=>`<tr><td>${p}</td><td><input type="number" step="0.1" id="hcp-${cssSafe(p)}" value="${handicapValue(p)??''}"></td><td><button class="btn-secondary btn-small" onclick="saveHandicap('${p.replace(/'/g,"\\'")}')">Speichern</button></td></tr>`).join("");
+    }
+    window.saveHandicap=async(player)=>{
+      const raw=document.getElementById(`hcp-${cssSafe(player)}`).value.trim();
+      const val=raw===""?null:Number(raw.replace(",","."));
+      if(val!==null && Number.isNaN(val)){alert("Ungültiges Handicap.");return;}
+      if(val===null) delete handicaps[player]; else handicaps[player]=val;
+      await setDoc(doc(db,"meta","handicaps"),{values:handicaps});
+      renderPlayers(); renderHandicaps(); updatePlan();
+    };
+
+    async function loadRounds(){
+      setCloudStatus("Lade Cloud-Daten …");
+      try{
+        const snap=await getDocs(query(collection(db,ROUNDS_COLLECTION),orderBy("createdAt","asc")));
+        const cloudRounds=snap.docs.map(d=>({id:d.id,...d.data()}));
+        rounds=[...buildImportedRounds(), ...cloudRounds];
+        renderStats();
+        if(rounds.length) renderRound(rounds[rounds.length-1]);
+        setCloudStatus("Cloud verbunden.","ok");
+      }catch(e){ console.error(e); setCloudStatus("Cloud-Fehler. Prüfe Firestore.","err"); }
+    }
+
+    window.selectAll=()=>{selected=new Set(allPlayers); updatePlan(); renderPlayers();};
+    window.clearSelection=()=>{selected.clear(); updatePlan(); renderPlayers();};
+    document.getElementById("allBtn").onclick=window.selectAll;
+    document.getElementById("clearBtn").onclick=window.clearSelection;
+    document.getElementById("historyPlayerFilter").onchange=e=>{selectedHistoryPlayer=e.target.value; renderPlayerHistory(); renderHistoryFilter();};
+    document.getElementById("clearHistoryFilterBtn").onclick=()=>{selectedHistoryPlayer=""; renderHistoryFilter(); renderPlayerHistory();};
+    document.getElementById("lastBtn").onclick=()=>{ if(rounds.length) renderRound(rounds[rounds.length-1]); else alert("Noch keine Runde gespeichert."); };
+    document.getElementById("generateBtn").onclick=async()=>{
+      const players=[...selected]; if(players.length<3){alert("Bitte mindestens 3 Spieler auswählen.");return;}
+      const groups=plannedGroups && normalizeFlight(plannedGroups.flat())===normalizeFlight(players) ? plannedGroups : createGroups(players);
+      const flights=Object.fromEntries(groups.map((g,i)=>[`flight${i+1}`,{players:g,scores:emptyScores(g),ladies:[],saved:false}]));
+      const round={date:new Date().toLocaleDateString("de-DE"),createdAt:serverTimestamp(),flights};
+      try{
+        setCloudStatus("Speichere Runde …","warn");
+        const ref=await addDoc(collection(db,ROUNDS_COLLECTION),round);
+        const local={id:ref.id,date:round.date,flights};
+        rounds.push(local);
+        updatePlan(); renderStats(); renderRound(local); setCloudStatus("Runde gespeichert.","ok");
+      }catch(e){ console.error(e); alert("Runde konnte nicht gespeichert werden."); setCloudStatus("Speichern fehlgeschlagen.","err"); }
+    };
+    document.getElementById("resetBtn").onclick=async()=>{
+      const pw=prompt("Admin-Code eingeben:"); if(pw!=="Kosaido"){alert("Kein Zugriff");return;}
+      if(!confirm("Elite+ Cloud-Daten wirklich löschen?")) return;
+      const snap=await getDocs(collection(db,ROUNDS_COLLECTION)); const batch=writeBatch(db); snap.forEach(d=>batch.delete(doc(db,ROUNDS_COLLECTION,d.id))); await batch.commit();
+      rounds=[]; renderStats(); renderRound(null); updatePlan(); setCloudStatus("Elite+ Cloud gelöscht.","ok");
+    };
+
+    renderHistoryFilter();
+    await loadHandicaps();
+    await loadRounds();
+    updatePlan();
+  </script>
 </body>
 </html>
