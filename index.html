@@ -657,7 +657,8 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
             stats[p].rounds++; stats[p].totalNetSF += Number(f.totals?.[p]?.netSF || 0); stats[p].lochpunkte += Number(f.totals?.[p]?.lochpunkte || 0);
           });
           if(stats[f.winner]) stats[f.winner].wins++;
-          if(stats[f.grossWinner]) stats[f.grossWinner].grossWins++;
+          const grossWinner = f.grossWinner || f.winner;
+          if(stats[grossWinner]) stats[grossWinner].grossWins++;
           if(stats[f.loser]) stats[f.loser].losses++;
           (f.ladies||[]).forEach(p=>{ if(stats[p]) stats[p].ladies++; });
           history.push({date:round.date,flight:f.players,winner:f.winner,loser:f.loser,totals:f.totals||{}});
