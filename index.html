@@ -248,6 +248,15 @@
         </section>
 
         <section class="card">
+  <h2>Brutto Ranking</h2>
+  <table>
+    <thead>
+      <tr><th>Platz</th><th>Spieler</th><th>Brutto-Siege</th><th>Runden</th></tr>
+    </thead>
+    <tbody id="grossRankingBody"></tbody>
+  </table>
+</section>
+<section class="card">
           <h2>Ranking</h2>
           <table>
             <thead>
@@ -257,15 +266,7 @@
             <tbody id="rankingBody"></tbody>
           </table>
         </section>
-<section class="card">
-  <h2>Brutto Ranking</h2>
-  <table>
-    <thead>
-      <tr><th>Platz</th><th>Spieler</th><th>Brutto-Siege</th><th>Runden</th></tr>
-    </thead>
-    <tbody id="grossRankingBody"></tbody>
-  </table>
-</section>
+
 
       </div>
 
@@ -357,7 +358,7 @@
     const db = getFirestore(app);
     const ROUNDS_COLLECTION = "elite_rounds_v1";
 
-    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi"];
+    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi","Markus","Georgi","Matti"];
     const defaultHandicaps = {
       "Luci": 11.0, "Dolli": 16.7, "Dickie": 21.2, "Thomas Wimmer": 19.7, "Thomas Schneider": 21.0,
       "Jörg": 25.0, "Martin": 18.4, "Carsten": 15.7, "Felix": 15.2, "Carl": 10.5, "Sascha": 19.7, "Adi": 19.2
@@ -377,6 +378,364 @@
     let localScores = {};
     let winsLossesChart = null;
     let pointsChart = null;
+
+    const legacyExcelResults = [
+      {
+            "date": "08.10.2025",
+            "winner": "Markus",
+            "grossWinner": "Markus",
+            "losers": [
+                  "Georgi"
+            ],
+            "loser": "Georgi",
+            "ladies": [],
+            "players": [
+                  "Markus",
+                  "Georgi"
+            ]
+      },
+      {
+            "date": "15.10.2025",
+            "winner": "Georgi",
+            "grossWinner": "Georgi",
+            "losers": [],
+            "loser": "Unbekannt",
+            "ladies": [],
+            "players": [
+                  "Georgi"
+            ]
+      },
+      {
+            "date": "22.10.2025",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Luci"
+            ],
+            "loser": "Luci",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Luci"
+            ]
+      },
+      {
+            "date": "29.10.2025",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Martin"
+            ],
+            "loser": "Martin",
+            "ladies": [
+                  "Luci"
+            ],
+            "players": [
+                  "Carl",
+                  "Martin",
+                  "Luci"
+            ]
+      },
+      {
+            "date": "12.11.2025",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Sascha"
+            ],
+            "loser": "Sascha",
+            "ladies": [
+                  "Sascha"
+            ],
+            "players": [
+                  "Carl",
+                  "Sascha"
+            ]
+      },
+      {
+            "date": "19.11.2025",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Georgi"
+            ],
+            "loser": "Georgi",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Georgi"
+            ]
+      },
+      {
+            "date": "26.11.2025",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Sascha"
+            ],
+            "loser": "Sascha",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Sascha"
+            ]
+      },
+      {
+            "date": "03.12.2025",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Sascha"
+            ],
+            "loser": "Sascha",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Sascha"
+            ]
+      },
+      {
+            "date": "09.12.2025",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Sascha",
+                  "Markus"
+            ],
+            "loser": "Sascha, Markus",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Sascha",
+                  "Markus"
+            ]
+      },
+      {
+            "date": "13.12.2025",
+            "winner": "Dolli",
+            "grossWinner": "Dolli",
+            "losers": [
+                  "Markus"
+            ],
+            "loser": "Markus",
+            "ladies": [],
+            "players": [
+                  "Dolli",
+                  "Markus"
+            ]
+      },
+      {
+            "date": "17.12.2025",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Luci"
+            ],
+            "loser": "Luci",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Luci"
+            ]
+      },
+      {
+            "date": "21.12.2025",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Markus"
+            ],
+            "loser": "Markus",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Markus"
+            ]
+      },
+      {
+            "date": "03.01.2026",
+            "winner": "Luci",
+            "grossWinner": "Luci",
+            "losers": [
+                  "Dolli"
+            ],
+            "loser": "Dolli",
+            "ladies": [],
+            "players": [
+                  "Luci",
+                  "Dolli"
+            ]
+      },
+      {
+            "date": "30.01.2026",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Martin"
+            ],
+            "loser": "Martin",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Martin"
+            ]
+      },
+      {
+            "date": "04.03.2026",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Martin"
+            ],
+            "loser": "Martin",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Martin"
+            ]
+      },
+      {
+            "date": "12.03.2026",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Martin"
+            ],
+            "loser": "Martin",
+            "ladies": [],
+            "players": [
+                  "Carl",
+                  "Martin"
+            ]
+      },
+      {
+            "date": "12.03.2026",
+            "winner": "Matti",
+            "grossWinner": "Matti",
+            "losers": [
+                  "Markus"
+            ],
+            "loser": "Markus",
+            "ladies": [],
+            "players": [
+                  "Matti",
+                  "Markus"
+            ]
+      },
+      {
+            "date": "18.03.2026",
+            "winner": "Luci",
+            "grossWinner": "Luci",
+            "losers": [
+                  "Sascha"
+            ],
+            "loser": "Sascha",
+            "ladies": [],
+            "players": [
+                  "Luci",
+                  "Sascha"
+            ]
+      },
+      {
+            "date": "18.03.2026",
+            "winner": "Martin",
+            "grossWinner": "Martin",
+            "losers": [
+                  "Thomas Wimmer"
+            ],
+            "loser": "Thomas Wimmer",
+            "ladies": [],
+            "players": [
+                  "Martin",
+                  "Thomas Wimmer"
+            ]
+      },
+      {
+            "date": "01.04.2026",
+            "winner": "Luci",
+            "grossWinner": "Luci",
+            "losers": [
+                  "Dolli"
+            ],
+            "loser": "Dolli",
+            "ladies": [
+                  "Martin"
+            ],
+            "players": [
+                  "Luci",
+                  "Dolli",
+                  "Martin"
+            ]
+      },
+      {
+            "date": "15.04.2026",
+            "winner": "Sascha",
+            "grossWinner": "Sascha",
+            "losers": [
+                  "Thomas Schneider"
+            ],
+            "loser": "Thomas Schneider",
+            "ladies": [
+                  "Jörg"
+            ],
+            "players": [
+                  "Sascha",
+                  "Thomas Schneider",
+                  "Jörg"
+            ]
+      },
+      {
+            "date": "15.04.2026",
+            "winner": "Carl",
+            "grossWinner": "Carl",
+            "losers": [
+                  "Markus"
+            ],
+            "loser": "Markus",
+            "ladies": [
+                  "Thomas Schneider"
+            ],
+            "players": [
+                  "Carl",
+                  "Markus",
+                  "Thomas Schneider"
+            ]
+      }
+];
+
+    function buildLegacyRounds(){
+      return legacyExcelResults.map((entry, index) => {
+        const totals = Object.fromEntries(entry.players.map(player => [
+          player,
+          {
+            netSF: player === entry.winner ? 1 : 0,
+            grossSF: player === entry.grossWinner ? 1 : 0,
+            lochpunkte: player === entry.winner ? 1 : 0,
+            netStrokes: 0,
+            grossStrokes: 0
+          }
+        ]));
+
+        return {
+          id: "legacy_excel_" + index,
+          date: entry.date,
+          legacy: true,
+          flights: {
+            flight1: {
+              players: entry.players,
+              winner: entry.winner,
+              grossWinner: entry.grossWinner,
+              loser: entry.loser,
+              losers: entry.losers || [],
+              ladies: entry.ladies || [],
+              saved: true,
+              totals
+            }
+          }
+        };
+      });
+    }
+
 
     document.getElementById("today").innerText = new Date().toLocaleDateString("de-DE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 
@@ -551,7 +910,16 @@
           <h3>Vorschlag ${i+1}</h3>
           <div class="chips">${g.map(p=>`<span class="chip">${p}</span>`).join("")}</div>
           <div class="flight-meta">Ø Handicap: ${groupHcpAvg(g)?.toFixed(1) || "offen"}</div>
-        </div>`).join("");
+        
+<div style="margin-top:10px">
+  <strong>Nearest to the Pin Gewinner:</strong>
+  <select onchange="setNtpWinner('${round.id}', this.value)">
+    <option value="">-- wählen --</option>
+    ${Object.values(round.flights).flatMap(f=>f.players).filter((v,i,a)=>a.indexOf(v)===i).map(p=>`<option value="${p}" ${round.ntpWinner===p?'selected':''}>${p}</option>`).join("")}
+  </select>
+</div>
+</div>`).join("");
+
     }
 
     function renderRound(round){
@@ -567,7 +935,7 @@
           <div class="flight">
             <h3>Flight ${idx+1}</h3>
             <div class="chips">${flight.players.map(p=>`<span class="chip ${computed.allComplete && computed.winner===p?'winner':''} ${computed.allComplete && computed.loser===p?'loser':''} ${(flight.ladies||[]).includes(p)?'lady':''}">${p}</span>`).join("")}</div>
-            <div class="flight-meta">Netto-Stableford ist Hauptwertung. Lochpunkt: höchster Netto-SF pro Loch; bei Gleichstand erhalten alle Punkt.</div>
+            <div class="flight-meta">Nearest to the Pin Loch: ${round.ntpHole || "-"}<br>Netto-Stableford ist Hauptwertung. Lochpunkt: höchster Netto-SF pro Loch; bei Gleichstand erhalten alle Punkt.</div>
             <div class="winner-box">
               <div class="hint" style="margin:0">Scoreeingabe ist passwortgeschützt.</div>
               <button class="btn-secondary" onclick="unlockFlight('${round.id}','${flightKey}')">${unlocked?'🔓 Freigeschaltet':'🔐 Scoreeingabe freischalten'}</button>
@@ -654,12 +1022,14 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
           if(!f.saved) return;
           flightStats[normalizeFlight(f.players)] = (flightStats[normalizeFlight(f.players)]||0)+1;
           f.players.forEach(p=>{
+            if(!stats[p]) stats[p]={rounds:0,wins:0,grossWins:0,losses:0,ladies:0,totalNetSF:0,lochpunkte:0};
             stats[p].rounds++; stats[p].totalNetSF += Number(f.totals?.[p]?.netSF || 0); stats[p].lochpunkte += Number(f.totals?.[p]?.lochpunkte || 0);
           });
           if(stats[f.winner]) stats[f.winner].wins++;
           const grossWinner = f.grossWinner || f.winner;
           if(stats[grossWinner]) stats[grossWinner].grossWins++;
-          if(stats[f.loser]) stats[f.loser].losses++;
+          const losers = f.losers && f.losers.length ? f.losers : (f.loser ? [f.loser] : []);
+          losers.forEach(loser => { if(stats[loser]) stats[loser].losses++; });
           (f.ladies||[]).forEach(p=>{ if(stats[p]) stats[p].ladies++; });
           history.push({date:round.date,flight:f.players,winner:f.winner,loser:f.loser,totals:f.totals||{}});
         });
@@ -740,7 +1110,8 @@ renderCharts(stats);
       setCloudStatus("Lade Cloud-Daten …");
       try{
         const snap=await getDocs(query(collection(db,ROUNDS_COLLECTION),orderBy("createdAt","asc")));
-        rounds=snap.docs.map(d=>({id:d.id,...d.data()}));
+        const cloudRounds=snap.docs.map(d=>({id:d.id,...d.data()}));
+        rounds=[...buildLegacyRounds(), ...cloudRounds];
         renderStats();
         if(rounds.length) renderRound(rounds[rounds.length-1]);
         setCloudStatus("Cloud verbunden.","ok");
@@ -758,7 +1129,8 @@ renderCharts(stats);
       const players=[...selected]; if(players.length<3){alert("Bitte mindestens 3 Spieler auswählen.");return;}
       const groups=plannedGroups && normalizeFlight(plannedGroups.flat())===normalizeFlight(players) ? plannedGroups : createGroups(players);
       const flights=Object.fromEntries(groups.map((g,i)=>[`flight${i+1}`,{players:g,scores:emptyScores(g),ladies:[],saved:false}]));
-      const round={date:new Date().toLocaleDateString("de-DE"),createdAt:serverTimestamp(),flights};
+      const ntpHole=[2,6,8][Math.floor(Math.random()*3)];
+      const round={date:new Date().toLocaleDateString("de-DE"),createdAt:serverTimestamp(),flights, ntpHole, ntpWinner:""};
       try{
         setCloudStatus("Speichere Runde …","warn");
         const ref=await addDoc(collection(db,ROUNDS_COLLECTION),round);
@@ -771,7 +1143,7 @@ renderCharts(stats);
       const pw=prompt("Admin-Code eingeben:"); if(pw!=="Kosaido"){alert("Kein Zugriff");return;}
       if(!confirm("Elite+ Cloud-Daten wirklich löschen?")) return;
       const snap=await getDocs(collection(db,ROUNDS_COLLECTION)); const batch=writeBatch(db); snap.forEach(d=>batch.delete(doc(db,ROUNDS_COLLECTION,d.id))); await batch.commit();
-      rounds=[]; renderStats(); renderRound(null); updatePlan(); setCloudStatus("Elite+ Cloud gelöscht.","ok");
+      rounds=buildLegacyRounds(); renderStats(); renderRound(rounds[rounds.length-1] || null); updatePlan(); setCloudStatus("Elite+ Cloud gelöscht. Excel-Historie bleibt erhalten.","ok");
     };
 
     renderHistoryFilter();
