@@ -344,7 +344,7 @@
     const db = getFirestore(app);
     const ROUNDS_COLLECTION = "elite_rounds_v1";
 
-    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi","Georgi","Matti"];
+    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi"];
     const defaultHandicaps = {
       "Luci": 11.0, "Dolli": 16.7, "Dickie": 21.2, "Thomas Wimmer": 19.7, "Thomas Schneider": 21.0,
       "Jörg": 25.0, "Martin": 18.4, "Carsten": 15.7, "Felix": 15.2, "Carl": 10.5, "Sascha": 19.7, "Adi": 19.2
@@ -354,57 +354,6 @@
       { hole:4, par:4, index:3 }, { hole:5, par:4, index:5 }, { hole:6, par:3, index:8 },
       { hole:7, par:4, index:6 }, { hole:8, par:3, index:9 }, { hole:9, par:4, index:2 }
     ];
-
-    const excelImportedResults = [
-      { date:"08.10.2025", winners:["Dickie"], losers:["Georgi"], ladies:[] },
-      { date:"15.10.2025", winners:["Georgi"], losers:[], ladies:[] },
-      { date:"22.10.2025", winners:["Carl"], losers:["Luci"], ladies:[] },
-      { date:"29.10.2025", winners:["Carl"], losers:["Martin"], ladies:["Luci"] },
-      { date:"12.11.2025", winners:["Carl"], losers:["Sascha"], ladies:["Sascha"] },
-      { date:"19.11.2025", winners:["Carl"], losers:["Georgi"], ladies:[] },
-      { date:"26.11.2025", winners:["Carl"], losers:["Sascha"], ladies:[] },
-      { date:"03.12.2025", winners:["Carl"], losers:["Sascha"], ladies:[] },
-      { date:"09.12.2025", winners:["Carl"], losers:["Sascha","Dickie"], ladies:[] },
-      { date:"13.12.2025", winners:["Dolli"], losers:["Dickie"], ladies:[] },
-      { date:"17.12.2025", winners:["Carl"], losers:["Luci"], ladies:[] },
-      { date:"21.12.2025", winners:["Carl"], losers:["Dickie"], ladies:[] },
-      { date:"03.01.2026", winners:["Luci"], losers:["Dolli"], ladies:[] },
-      { date:"30.01.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
-      { date:"04.03.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
-      { date:"12.03.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
-      { date:"12.03.2026", winners:["Matti"], losers:["Dickie"], ladies:[] },
-      { date:"18.03.2026", winners:["Luci"], losers:["Sascha"], ladies:[] },
-      { date:"18.03.2026", winners:["Martin"], losers:["Thomas Wimmer"], ladies:[] },
-      { date:"01.04.2026", winners:["Luci"], losers:["Dolli"], ladies:["Martin"] },
-      { date:"15.04.2026", winners:["Sascha"], losers:["Thomas Schneider"], ladies:["Jörg"] },
-      { date:"15.04.2026", winners:["Carl"], losers:["Dickie"], ladies:["Thomas Schneider"] }
-    ];
-
-    function buildImportedRounds(){
-      return excelImportedResults.map((entry,index)=>{
-        const players=[...new Set([...(entry.winners||[]), ...(entry.losers||[]), ...(entry.ladies||[])])];
-        const winnerText=(entry.winners||[]).join(", ");
-        const loserText=(entry.losers||[]).join(", ");
-        return {
-          id:`excel_import_${index+1}`,
-          date:entry.date,
-          imported:true,
-          flights:{
-            flight1:{
-              players,
-              winner:winnerText,
-              winners:entry.winners||[],
-              loser:loserText,
-              losers:entry.losers||[],
-              ladies:entry.ladies||[],
-              saved:true,
-              imported:true,
-              totals:Object.fromEntries(players.map(p=>[p,{lochpunkte:(entry.winners||[]).includes(p)?1:0}]))
-            }
-          }
-        };
-      });
-    }
 
     let selected = new Set();
     let rounds = [];
@@ -465,8 +414,9 @@
       return Object.fromEntries(vals.map(v=>[v.name,Math.max(0,v.hcp-min)]));
     }
     function strokesForHole(relativeHcp, index){
-      const base=Math.floor(relativeHcp/9);
-      const rest=relativeHcp%9;
+      const reducedHcp = Math.round(relativeHcp / 3);
+      const base=Math.floor(reducedHcp/9);
+      const rest=reducedHcp%9;
       return base + (index<=rest ? 1 : 0);
     }
     function stableford(par, score){
@@ -532,10 +482,18 @@
       );
       const completeHoles=holes.filter(h=>h.complete).length;
       const nextHole=holes.find(h=>!h.complete)?.hole || 9;
+      const grossRanking = group.map(player=>({player,...totals[player]})).sort((a,b)=>
+        (b.grossSF-a.grossSF) ||
+        (b.lochpunkte-a.lochpunkte) ||
+        (a.grossStrokes-b.grossStrokes) ||
+        a.player.localeCompare(b.player,"de")
+      );
+
       return {
-        holes, totals, ranking, completeHoles,
+        holes, totals, ranking, grossRanking, completeHoles,
         allComplete: completeHoles===9,
         winner: ranking[0]?.player || "",
+        grossWinner: grossRanking[0]?.player || "", 
         loser: ranking[ranking.length-1]?.player || "",
         nextHole
       };
@@ -633,7 +591,9 @@
               ${flight.players.map(p=>`<label class="check-item"><input type="checkbox" ${unlocked?'':'disabled'} ${(flight.ladies||[]).includes(p)?'checked':''} onchange="toggleLady('${round.id}','${flightKey}','${p.replace(/'/g,"\\'")}')"><span>Lady: ${p}</span></label>`).join("")}
             </div>
             <div class="winner-box">
-              <div class="hint" style="margin:0">${computed.allComplete?`Berechnet: Sieger ${computed.winner}, Verlierer ${computed.loser}.`:'Speichern erst nach 9 vollständigen Löchern möglich.'}</div>
+              <div class="hint" style="margin:0">${computed.allComplete?`Netto-Sieger: ${computed.winner} 🟢<br>
+Brutto-Sieger: ${computed.grossWinner} 🔵<br>
+Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löchern möglich.'}</div>
               <button class="btn-gold" ${computed.allComplete && unlocked?'':'disabled'} onclick="saveFlight('${round.id}','${flightKey}')">💾 Flight speichern</button>
             </div>
             ${flight.saved?`<div class="winner-tag">Gespeichert: ${flight.winner}</div><div class="loser-tag">Verlierer: ${flight.loser}</div>`:''}
@@ -672,39 +632,21 @@
       }catch(e){ console.error(e); alert("Speichern fehlgeschlagen."); setCloudStatus("Speichern fehlgeschlagen.","err"); }
     };
 
-    function asList(value){
-      if(Array.isArray(value)) return value.filter(Boolean);
-      if(typeof value === "string" && value.trim()) return value.split(",").map(x=>x.trim()).filter(Boolean);
-      return [];
-    }
-
     function calcStats(){
-      const stats=Object.fromEntries(allPlayers.map(p=>[p,{rounds:0,wins:0,losses:0,ladies:0,totalNetSF:0,netSFRounds:0,lochpunkte:0}]));
-      const ensurePlayer=(p)=>{ if(p && !stats[p]) stats[p]={rounds:0,wins:0,losses:0,ladies:0,totalNetSF:0,netSFRounds:0,lochpunkte:0}; };
+      const stats=Object.fromEntries(allPlayers.map(p=>[p,{rounds:0,wins:0,losses:0,ladies:0,totalNetSF:0,lochpunkte:0}]));
       const flightStats={};
       const history=[];
       rounds.forEach(round=>{
         Object.values(round.flights||{}).forEach(f=>{
           if(!f.saved) return;
-          const winners=asList(f.winners).length ? asList(f.winners) : asList(f.winner);
-          const losers=asList(f.losers).length ? asList(f.losers) : asList(f.loser);
-          const ladies=asList(f.ladies);
-          const players=[...new Set([...(f.players||[]), ...winners, ...losers, ...ladies])].filter(p=>p && p!=="Unbekannt");
-          players.forEach(ensurePlayer);
-          flightStats[normalizeFlight(players)] = (flightStats[normalizeFlight(players)]||0)+1;
-          players.forEach(p=>{
-            stats[p].rounds++;
-            const netSF=f.totals?.[p]?.netSF;
-            if(typeof netSF === "number" && Number.isFinite(netSF)){
-              stats[p].totalNetSF += netSF;
-              stats[p].netSFRounds++;
-            }
-            stats[p].lochpunkte += Number(f.totals?.[p]?.lochpunkte || 0);
+          flightStats[normalizeFlight(f.players)] = (flightStats[normalizeFlight(f.players)]||0)+1;
+          f.players.forEach(p=>{
+            stats[p].rounds++; stats[p].totalNetSF += Number(f.totals?.[p]?.netSF || 0); stats[p].lochpunkte += Number(f.totals?.[p]?.lochpunkte || 0);
           });
-          winners.forEach(p=>{ ensurePlayer(p); stats[p].wins++; });
-          losers.forEach(p=>{ ensurePlayer(p); stats[p].losses++; });
-          ladies.forEach(p=>{ ensurePlayer(p); stats[p].ladies++; });
-          history.push({date:round.date,flight:players,winner:winners.join(", "),winners,loser:losers.join(", "),losers,totals:f.totals||{},imported:!!f.imported||!!round.imported});
+          if(stats[f.winner]) stats[f.winner].wins++;
+          if(stats[f.loser]) stats[f.loser].losses++;
+          (f.ladies||[]).forEach(p=>{ if(stats[p]) stats[p].ladies++; });
+          history.push({date:round.date,flight:f.players,winner:f.winner,loser:f.loser,totals:f.totals||{}});
         });
       });
       return {stats,flightStats,history};
@@ -714,7 +656,7 @@
       const {stats,flightStats,history}=calcStats();
       const rows=Object.entries(stats).sort((a,b)=>b[1].wins-a[1].wins || b[1].totalNetSF-a[1].totalNetSF || a[0].localeCompare(b[0],"de"));
       document.getElementById("rankingBody").innerHTML=rows.map(([p,s],i)=>`<tr class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}"><td>${i+1}</td><td>${p}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.rounds}</td><td>${s.rounds?Math.round(s.wins/s.rounds*100):0}%</td></tr>`).join("");
-      document.getElementById("playerStatsBody").innerHTML=Object.entries(stats).map(([p,s])=>`<tr><td>${p}</td><td>${s.rounds}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.netSFRounds?(s.totalNetSF/s.netSFRounds).toFixed(1):"–"}</td><td>${s.lochpunkte}</td><td>${s.ladies}</td></tr>`).join("");
+      document.getElementById("playerStatsBody").innerHTML=Object.entries(stats).map(([p,s])=>`<tr><td>${p}</td><td>${s.rounds}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.rounds?(s.totalNetSF/s.rounds).toFixed(1):"0.0"}</td><td>${s.lochpunkte}</td><td>${s.ladies}</td></tr>`).join("");
       const ladyKing=Object.entries(stats).sort((a,b)=>b[1].ladies-a[1].ladies)[0];
       const underdog=Object.entries(stats).sort((a,b)=>b[1].losses-a[1].losses)[0];
       document.getElementById("titlesBody").innerHTML=`<tr><td>👑 Lady King</td><td>${ladyKing?.[0]||"-"}</td><td>${ladyKing?.[1]?.ladies||0}</td></tr><tr><td>💀 Underdog</td><td>${underdog?.[0]||"-"}</td><td>${underdog?.[1]?.losses||0}</td></tr>`;
@@ -731,7 +673,7 @@
       history.forEach(h=>{
         h.flight.forEach(p=>{
           if(filter && p!==filter) return;
-          const role=(h.winners||[]).includes(p)?"Gewinner":(h.losers||[]).includes(p)?"Verlierer":"Mitgespielt";
+          const role=p===h.winner?"Gewinner":p===h.loser?"Verlierer":"Mitgespielt";
           rows.push(`<tr><td>${h.date}</td><td>${h.flight.join(", ")}</td><td>${p}: ${role}</td><td>${h.totals[p]?.netSF ?? "-"}</td><td>${h.totals[p]?.lochpunkte ?? "-"}</td></tr>`);
         });
       });
@@ -748,7 +690,7 @@
       if(pointsChart) pointsChart.destroy();
       const options={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#667085"}}},scales:{x:{ticks:{color:"#667085"},grid:{color:"#eef2f7"}},y:{beginAtZero:true,ticks:{color:"#667085"},grid:{color:"#eef2f7"}}}};
       winsLossesChart=new Chart(document.getElementById("winsLossesChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Siege",data:labels.map(p=>stats[p].wins)},{label:"Niederlagen",data:labels.map(p=>stats[p].losses)}]},options});
-      pointsChart=new Chart(document.getElementById("pointsChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Ø Netto-SF",data:labels.map(p=>stats[p].netSFRounds?+(stats[p].totalNetSF/stats[p].netSFRounds).toFixed(1):0)}]},options});
+      pointsChart=new Chart(document.getElementById("pointsChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Ø Netto-SF",data:labels.map(p=>stats[p].rounds?+(stats[p].totalNetSF/stats[p].rounds).toFixed(1):0)}]},options});
     }
 
     async function loadHandicaps(){
@@ -775,8 +717,7 @@
       setCloudStatus("Lade Cloud-Daten …");
       try{
         const snap=await getDocs(query(collection(db,ROUNDS_COLLECTION),orderBy("createdAt","asc")));
-        const cloudRounds=snap.docs.map(d=>({id:d.id,...d.data()}));
-        rounds=[...buildImportedRounds(), ...cloudRounds];
+        rounds=snap.docs.map(d=>({id:d.id,...d.data()}));
         renderStats();
         if(rounds.length) renderRound(rounds[rounds.length-1]);
         setCloudStatus("Cloud verbunden.","ok");
