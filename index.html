@@ -250,10 +250,23 @@
         <section class="card">
           <h2>Ranking</h2>
           <table>
-            <thead><tr><th>Platz</th><th>Spieler</th><th>Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr></thead>
+            <thead>
+<tr><th colspan="6">🟢 Netto Ranking</th></tr>
+<tr><th>Platz</th><th>Spieler</th><th>Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr>
+</thead>
             <tbody id="rankingBody"></tbody>
           </table>
         </section>
+<section class="card">
+  <h2>Brutto Ranking</h2>
+  <table>
+    <thead>
+      <tr><th>Platz</th><th>Spieler</th><th>Brutto-Siege</th><th>Runden</th></tr>
+    </thead>
+    <tbody id="grossRankingBody"></tbody>
+  </table>
+</section>
+
       </div>
 
       <div class="stack">
@@ -633,7 +646,7 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
     };
 
     function calcStats(){
-      const stats=Object.fromEntries(allPlayers.map(p=>[p,{rounds:0,wins:0,losses:0,ladies:0,totalNetSF:0,lochpunkte:0}]));
+      const stats=Object.fromEntries(allPlayers.map(p=>[p,{rounds:0,wins:0,grossWins:0,losses:0,ladies:0,totalNetSF:0,lochpunkte:0}]));
       const flightStats={};
       const history=[];
       rounds.forEach(round=>{
@@ -644,6 +657,7 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
             stats[p].rounds++; stats[p].totalNetSF += Number(f.totals?.[p]?.netSF || 0); stats[p].lochpunkte += Number(f.totals?.[p]?.lochpunkte || 0);
           });
           if(stats[f.winner]) stats[f.winner].wins++;
+          if(stats[f.grossWinner]) stats[f.grossWinner].grossWins++;
           if(stats[f.loser]) stats[f.loser].losses++;
           (f.ladies||[]).forEach(p=>{ if(stats[p]) stats[p].ladies++; });
           history.push({date:round.date,flight:f.players,winner:f.winner,loser:f.loser,totals:f.totals||{}});
@@ -655,7 +669,8 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
     function renderStats(){
       const {stats,flightStats,history}=calcStats();
       const rows=Object.entries(stats).sort((a,b)=>b[1].wins-a[1].wins || b[1].totalNetSF-a[1].totalNetSF || a[0].localeCompare(b[0],"de"));
-      document.getElementById("rankingBody").innerHTML=rows.map(([p,s],i)=>`<tr class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}"><td>${i+1}</td><td>${p}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.rounds}</td><td>${s.rounds?Math.round(s.wins/s.rounds*100):0}%</td></tr>`).join("");
+      
+document.getElementById("rankingBody").innerHTML=rows.map(([p,s],i)=>`<tr class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}"><td>${i+1}</td><td>${p}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.rounds}</td><td>${s.rounds?Math.round(s.wins/s.rounds*100):0}%</td></tr>`).join("");
       document.getElementById("playerStatsBody").innerHTML=Object.entries(stats).map(([p,s])=>`<tr><td>${p}</td><td>${s.rounds}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.rounds?(s.totalNetSF/s.rounds).toFixed(1):"0.0"}</td><td>${s.lochpunkte}</td><td>${s.ladies}</td></tr>`).join("");
       const ladyKing=Object.entries(stats).sort((a,b)=>b[1].ladies-a[1].ladies)[0];
       const underdog=Object.entries(stats).sort((a,b)=>b[1].losses-a[1].losses)[0];
@@ -664,7 +679,14 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
       document.getElementById("historyBody").innerHTML=history.slice().reverse().map(h=>`<tr><td>${h.date}</td><td>${h.flight.join(", ")}</td><td>${h.winner}</td><td>${h.loser}</td><td>${h.totals[h.winner]?.netSF ?? "-"}</td></tr>`).join("") || '<tr><td colspan="5" class="muted">Noch keine Historie.</td></tr>';
       renderPlayerHistory();
       updateTopStats();
-      renderCharts(stats);
+      
+// Gross Ranking
+const grossRows = Object.entries(stats).sort((a,b)=>b[1].grossWins-a[1].grossWins);
+document.getElementById("grossRankingBody").innerHTML = grossRows.map(([p,s],i)=>
+  `<tr><td>${i+1}</td><td>${p}</td><td>${s.grossWins}</td><td>${s.rounds}</td></tr>`
+).join("");
+
+renderCharts(stats);
     }
 
     function renderPlayerHistory(){
