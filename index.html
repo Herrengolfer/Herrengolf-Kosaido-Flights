@@ -357,6 +357,11 @@
 
     let selected = new Set();
     let rounds = [];
+
+// 🔒 SAFE HELPERS
+const safeArray = (v) => Array.isArray(v) ? v : [];
+const safeObj = (v) => (v && typeof v === "object") ? v : {};
+
     let handicaps = {};
     let plannedGroups = null;
     let selectedHistoryPlayer = "";
@@ -441,7 +446,7 @@
     function computeFlight(flight, scores){
       const group=flight.players;
       const rel=relativeHcpMap(group);
-      const totals=Object.fromEntries(group.map(p=>[p,{grossSF:0,netSF:0,lochpunkte:0,grossLochpunkte:0,grossStrokes:0,netStrokes:0}]));
+      const totals=Object.fromEntries(group.map(p=>[p,{grossSF:0,netSF:0,lochpunkte:0,grossStrokes:0,netStrokes:0}]));
       const holes=[];
       for(const hole of courseHoles){
         const entries=group.map(player=>{
@@ -456,7 +461,7 @@
         const complete=entries.every(e=>e.complete);
         let winners=[], status="";
         if(complete){
-          const best=Math.max(...(entries || []).map(e=>e.netSF));
+          const best=Math.max(...safeArray(entries).map(e=>e.netSF));
           winners=entries.filter(e=>e.netSF===best).map(e=>e.player);
           entries.forEach(e=>{
             totals[e.player].grossSF += e.grossSF;
@@ -465,12 +470,6 @@
             totals[e.player].netStrokes += e.netScore;
           });
           winners.forEach(w=>totals[w].lochpunkte += 1);
-
-// 🔵 Brutto Matchplay
-const bestGross = Math.max(...(entries || []).map(e=>e.grossSF));
-const grossWinners = entries.filter(e=>e.grossSF===bestGross).map(e=>e.player);
-grossWinners.forEach(w=>totals[w].grossLochpunkte += 1);
-
           status = winners.length===1
             ? `${winners[0]} gewinnt Loch ${hole.hole} mit ${best} Netto-SF`
             : `Loch ${hole.hole} geteilt: ${winners.join(", ")} je 1 Lochpunkt`;
@@ -478,7 +477,6 @@ grossWinners.forEach(w=>totals[w].grossLochpunkte += 1);
         holes.push({...hole, entries, complete, winners, status});
       }
       const ranking=group.map(player=>({player,...totals[player]})).sort((a,b)=>
-
         (b.netSF-a.netSF) ||
         (b.lochpunkte-a.lochpunkte) ||
         (b.grossSF-a.grossSF) ||
@@ -486,18 +484,12 @@ grossWinners.forEach(w=>totals[w].grossLochpunkte += 1);
         (roundedHcp(b.player)-roundedHcp(a.player)) ||
         a.player.localeCompare(b.player,"de")
       );
-      const grossRanking = group.map(player=>({player,...totals[player]})).sort((a,b)=>
-        (b.grossLochpunkte-a.grossLochpunkte) ||
-        (b.grossSF-a.grossSF)
-      );
-
       const completeHoles=holes.filter(h=>h.complete).length;
       const nextHole=holes.find(h=>!h.complete)?.hole || 9;
       return {
         holes, totals, ranking, completeHoles,
         allComplete: completeHoles===9,
         winner: ranking[0]?.player || "",
-        grossWinner: grossRanking[0]?.player || "", 
         loser: ranking[ranking.length-1]?.player || "",
         nextHole
       };
@@ -557,7 +549,7 @@ grossWinners.forEach(w=>totals[w].grossLochpunkte += 1);
         return `
           <div class="flight">
             <h3>Flight ${idx+1}</h3>
-            <div class="chips">${(flight.players || []).map(p=>`<span class="chip ${computed.allComplete && computed.winner===p?'winner':''} ${computed.allComplete && computed.loser===p?'loser':''} ${(flight.ladies||[]).includes(p)?'lady':''}">${p}</span>`).join("")}</div>
+            <div class="chips">${safeArray(flight.players).map(p=>`<span class="chip ${computed.allComplete && computed.winner===p?'winner':''} ${computed.allComplete && computed.loser===p?'loser':''} ${(flight.ladies||[]).includes(p)?'lady':''}">${p}</span>`).join("")}</div>
             <div class="flight-meta">Netto-Stableford ist Hauptwertung. Lochpunkt: höchster Netto-SF pro Loch; bei Gleichstand erhalten alle Punkt.</div>
             <div class="winner-box">
               <div class="hint" style="margin:0">Scoreeingabe ist passwortgeschützt.</div>
@@ -573,7 +565,7 @@ grossWinners.forEach(w=>totals[w].grossLochpunkte += 1);
                 </div>
                 <table class="score-table">
                   <thead><tr><th>Spieler</th><th>Schläge</th><th>Vorgabe</th><th>Brutto SF</th><th>Netto SF</th></tr></thead>
-                  <tbody>${(flight.players || []).map(p=>{
+                  <tbody>${safeArray(flight.players).map(p=>{
                     const e=h.entries.find(x=>x.player===p);
                     return `<tr>
                       <td>${p}</td>
@@ -587,18 +579,12 @@ grossWinners.forEach(w=>totals[w].grossLochpunkte += 1);
             }).join("")}
 
             <div class="live-ranking">
-              <div class="live-row"><strong>🟢 Netto Stand</strong><strong>${computed.completeHoles}/9 Löcher</strong></div>
+              <div class="live-row"><strong>Aktueller Stand</strong><strong>${computed.completeHoles}/9 Löcher</strong></div>
               ${computed.ranking.map((r,i)=>`<div class="live-row"><span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i===computed.ranking.length-1?'💀':''} ${r.player}</span><strong>Netto-SF ${r.netSF} · LP ${r.lochpunkte}</strong></div>`).join("")}
             </div>
-
-            <div class="live-ranking">
-              <div class="live-row"><strong>🔵 Brutto Stand</strong></div>
-              ${computed.grossRanking.map(r=>`<div class="live-row"><span>${r.player}</span><strong>LP ${r.grossLochpunkte}</strong></div>`).join("")}
-            </div>
-
             <div class="match-status ${ms.cls}">${ms.text}</div>
             <div class="checkbox-grid">
-              ${(flight.players || []).map(p=>`<label class="check-item"><input type="checkbox" ${unlocked?'':'disabled'} ${(flight.ladies||[]).includes(p)?'checked':''} onchange="toggleLady('${round.id}','${flightKey}','${p.replace(/'/g,"\\'")}')"><span>Lady: ${p}</span></label>`).join("")}
+              ${safeArray(flight.players).map(p=>`<label class="check-item"><input type="checkbox" ${unlocked?'':'disabled'} ${(flight.ladies||[]).includes(p)?'checked':''} onchange="toggleLady('${round.id}','${flightKey}','${p.replace(/'/g,"\\'")}')"><span>Lady: ${p}</span></label>`).join("")}
             </div>
             <div class="winner-box">
               <div class="hint" style="margin:0">${computed.allComplete?`Berechnet: Sieger ${computed.winner}, Verlierer ${computed.loser}.`:'Speichern erst nach 9 vollständigen Löchern möglich.'}</div>
@@ -617,7 +603,7 @@ grossWinners.forEach(w=>totals[w].grossLochpunkte += 1);
       const round=rounds.find(r=>r.id===roundId); const flight=round.flights[flightKey];
       const scores=getScores(roundId,flightKey,flight); const computed=computeFlight(flight,scores);
       if(!computed.allComplete){ alert("Bitte alle 9 Löcher vollständig eintragen."); return; }
-      const cleanScores=Object.fromEntries((flight.players || []).map(p=>[p,Object.fromEntries(courseHoles.map(h=>[String(h.hole), Number(scores[p][String(h.hole)] || 0)]))]));
+      const cleanScores=Object.fromEntries(safeArray(flight.players).map(p=>[p,Object.fromEntries(courseHoles.map(h=>[String(h.hole), Number(scores[p][String(h.hole)] || 0)]))]));
       const updatedFlight={
         players: flight.players,
         scores: cleanScores,
