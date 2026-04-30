@@ -248,10 +248,25 @@
         </section>
 
         <section class="card">
-          <h2>Ranking</h2>
+          <h2>Golf-Ranking</h2>
           <table>
             <thead><tr><th>Platz</th><th>Spieler</th><th>Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr></thead>
             <tbody id="rankingBody"></tbody>
+          </table>
+        </section>
+        <section class="card">
+          <h2>Netto-Sieg Ranking 🏆</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Platz</th>
+                <th>Spieler</th>
+                <th>Ø Netto-SF</th>
+                <th>HCP</th>
+                <th>Wertung</th>
+              </tr>
+            </thead>
+            <tbody id="nettoRankingBody"></tbody>
           </table>
         </section>
       </div>
@@ -294,7 +309,7 @@
         <div class="chart-wrap"><canvas id="winsLossesChart"></canvas></div>
       </section>
       <section class="card">
-        <h2>Diagramm: Netto-Stableford Ø</h2>
+        <h2>Diagramm: Netto-Ranking</h2><div class="chart-wrap"><canvas id="nettoRankingChart"></canvas></div></section><section class="card"><h2>Diagramm: Netto-Stableford Ø</h2>
         <div class="chart-wrap"><canvas id="pointsChart"></canvas></div>
       </section>
     </div>
@@ -415,6 +430,7 @@
     let localScores = {};
     let winsLossesChart = null;
     let pointsChart = null;
+    let nettoRankingChart = null;
 
     document.getElementById("today").innerText = new Date().toLocaleDateString("de-DE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 
@@ -722,7 +738,29 @@
       document.getElementById("historyBody").innerHTML=history.slice().reverse().map(h=>`<tr><td>${h.date}</td><td>${h.flight.join(", ")}</td><td>${h.winner}</td><td>${h.loser}</td><td>${h.totals[h.winner]?.netSF ?? "-"}</td></tr>`).join("") || '<tr><td colspan="5" class="muted">Noch keine Historie.</td></tr>';
       renderPlayerHistory();
       updateTopStats();
+      
+      const nettoRows = Object.entries(stats)
+        .map(([p, s]) => {
+          const avgNet = s.netSFRounds ? (s.totalNetSF / s.netSFRounds) : 0;
+          const hcp = handicapValue(p) || 0;
+          const value = avgNet - (hcp / 3);
+          return { player: p, avgNet, hcp, value };
+        })
+        .sort((a, b) => b.value - a.value);
+
+      document.getElementById("nettoRankingBody").innerHTML =
+        nettoRows.map((r, i) => `
+          <tr>
+            <td>${i===0?'🏆 ':''}${i+1}</td>
+            <td>${r.player}</td>
+            <td>${r.avgNet.toFixed(1)}</td>
+            <td>${r.hcp.toFixed(1)}</td>
+            <td>${r.value.toFixed(2)}</td>
+          </tr>
+        `).join("");
+
       renderCharts(stats);
+
     }
 
     function renderPlayerHistory(){
@@ -748,6 +786,17 @@
       if(pointsChart) pointsChart.destroy();
       const options={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#667085"}}},scales:{x:{ticks:{color:"#667085"},grid:{color:"#eef2f7"}},y:{beginAtZero:true,ticks:{color:"#667085"},grid:{color:"#eef2f7"}}}};
       winsLossesChart=new Chart(document.getElementById("winsLossesChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Siege",data:labels.map(p=>stats[p].wins)},{label:"Niederlagen",data:labels.map(p=>stats[p].losses)}]},options});
+      if (nettoRankingChart) nettoRankingChart.destroy();
+      nettoRankingChart = new Chart(
+        document.getElementById("nettoRankingChart").getContext("2d"),
+        {
+          type: "bar",
+          data: {
+            labels: nettoRows.map(r => r.player),
+            datasets: [{ label: "Netto", data: nettoRows.map(r => r.value) }]
+          }
+        }
+      );
       pointsChart=new Chart(document.getElementById("pointsChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Ø Netto-SF",data:labels.map(p=>stats[p].netSFRounds?+(stats[p].totalNetSF/stats[p].netSFRounds).toFixed(1):0)}]},options});
     }
 
@@ -780,7 +829,7 @@
         renderStats();
         if(rounds.length) renderRound(rounds[rounds.length-1]);
         setCloudStatus("Cloud verbunden.","ok");
-      }catch(e){ console.error(e); setCloudStatus("Cloud-Fehler. Prüfe Firestore.","err"); }
+      }catch(e){ console.error(e); setCloudStatus("Offline-Modus aktiv.","warn"); rounds=[...buildImportedRounds()]; renderStats(); }
     }
 
     window.selectAll=()=>{selected=new Set(allPlayers); updatePlan(); renderPlayers();};
