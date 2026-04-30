@@ -359,7 +359,7 @@
     const db = getFirestore(app);
     const ROUNDS_COLLECTION = "elite_rounds_v1";
 
-    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi","Dickie","Georgi","Matti"];
+    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi","Markus","Georgi","Matti"];
     const defaultHandicaps = {
       "Luci": 11.0, "Dolli": 16.7, "Dickie": 21.2, "Thomas Wimmer": 19.7, "Thomas Schneider": 21.0,
       "Jörg": 25.0, "Martin": 18.4, "Carsten": 15.7, "Felix": 15.2, "Carl": 10.5, "Sascha": 19.7, "Adi": 19.2
@@ -371,7 +371,7 @@
     ];
 
     const excelImportedResults = [
-      { date:"08.10.2025", winners:["Dickie"], losers:["Georgi"], ladies:[] },
+      { date:"08.10.2025", winners:["Markus"], losers:["Georgi"], ladies:[] },
       { date:"15.10.2025", winners:["Georgi"], losers:[], ladies:[] },
       { date:"22.10.2025", winners:["Carl"], losers:["Luci"], ladies:[] },
       { date:"29.10.2025", winners:["Carl"], losers:["Martin"], ladies:["Luci"] },
@@ -379,20 +379,20 @@
       { date:"19.11.2025", winners:["Carl"], losers:["Georgi"], ladies:[] },
       { date:"26.11.2025", winners:["Carl"], losers:["Sascha"], ladies:[] },
       { date:"03.12.2025", winners:["Carl"], losers:["Sascha"], ladies:[] },
-      { date:"09.12.2025", winners:["Carl"], losers:["Sascha","Dickie"], ladies:[] },
-      { date:"13.12.2025", winners:["Dolli"], losers:["Dickie"], ladies:[] },
+      { date:"09.12.2025", winners:["Carl"], losers:["Sascha","Markus"], ladies:[] },
+      { date:"13.12.2025", winners:["Dolli"], losers:["Markus"], ladies:[] },
       { date:"17.12.2025", winners:["Carl"], losers:["Luci"], ladies:[] },
-      { date:"21.12.2025", winners:["Carl"], losers:["Dickie"], ladies:[] },
+      { date:"21.12.2025", winners:["Carl"], losers:["Markus"], ladies:[] },
       { date:"03.01.2026", winners:["Luci"], losers:["Dolli"], ladies:[] },
       { date:"30.01.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
       { date:"04.03.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
       { date:"12.03.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
-      { date:"12.03.2026", winners:["Matti"], losers:["Dickie"], ladies:[] },
+      { date:"12.03.2026", winners:["Matti"], losers:["Markus"], ladies:[] },
       { date:"18.03.2026", winners:["Luci"], losers:["Sascha"], ladies:[] },
       { date:"18.03.2026", winners:["Martin"], losers:["Thomas Wimmer"], ladies:[] },
       { date:"01.04.2026", winners:["Luci"], losers:["Dolli"], ladies:["Martin"] },
       { date:"15.04.2026", winners:["Sascha"], losers:["Thomas Schneider"], ladies:["Jörg"] },
-      { date:"15.04.2026", winners:["Carl"], losers:["Dickie"], ladies:["Thomas Schneider"] }
+      { date:"15.04.2026", winners:["Carl"], losers:["Markus"], ladies:["Thomas Schneider"] }
     ];
 
     function buildImportedRounds(){
@@ -786,6 +786,17 @@
       if(pointsChart) pointsChart.destroy();
       const options={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#667085"}}},scales:{x:{ticks:{color:"#667085"},grid:{color:"#eef2f7"}},y:{beginAtZero:true,ticks:{color:"#667085"},grid:{color:"#eef2f7"}}}};
       winsLossesChart=new Chart(document.getElementById("winsLossesChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Siege",data:labels.map(p=>stats[p].wins)},{label:"Niederlagen",data:labels.map(p=>stats[p].losses)}]},options});
+      
+      // Netto-Ranking für Chart neu berechnen
+      const nettoRows = Object.entries(stats)
+        .map(([p, s]) => {
+          const avgNet = s.netSFRounds ? (s.totalNetSF / s.netSFRounds) : 0;
+          const hcp = handicapValue(p) || 0;
+          const value = avgNet - (hcp / 3);
+          return { player: p, value };
+        })
+        .sort((a, b) => b.value - a.value);
+
       if (nettoRankingChart) nettoRankingChart.destroy();
       nettoRankingChart = new Chart(
         document.getElementById("nettoRankingChart").getContext("2d"),
