@@ -803,7 +803,7 @@
     }
     function setScore(roundId, flightKey, player, hole, value){
       const round=rounds.find(r=>r.id===roundId); if(!round) return;
-      const flight=flights[flightKey]; const scores=getScores(roundId, flightKey, flight);
+      const flight=round.flights[flightKey]; const scores=getScores(roundId, flightKey, flight);
       const n=Number(value);
       scores[player][String(hole)] = Number.isFinite(n) && n>0 ? n : "";
       renderRound(round);
@@ -914,11 +914,11 @@
 
     function renderRound(round){
       if(!round){ document.getElementById("output").innerHTML='<div class="muted">Noch keine Runde erzeugt.</div>'; return; }
-      const flights=Object.entries(flights||{});
-      document.getElementById("output").innerHTML=flights.map(([flightKey,flight],idx)=>{
-        const scores=getScores(id, flightKey, flight);
+      const flights=Object.entries(round.flights||{});
+      document.getElementById("output").innerHTML=Object.values(round.flights || {}).map(([flightKey,flight],idx)=>{
+        const scores=getScores(round.id, flightKey, flight);
         const computed=computeFlight(flight,scores);
-        const unlocked=!!adminUnlocked[id+"__"+flightKey];
+        const unlocked=!!adminUnlocked[round.id+"__"+flightKey];
         const visibleHole=Math.max(1, computed.nextHole);
         const ms=matchStatus(computed);
         return `
@@ -928,7 +928,7 @@
             <div class="flight-meta">Netto-Stableford ist Hauptwertung. Lochpunkt: höchster Netto-SF pro Loch; bei Gleichstand erhalten alle Punkt.</div>
             <div class="winner-box">
               <div class="hint" style="margin:0">Scoreeingabe ist passwortgeschützt.</div>
-              <button class="btn-secondary" onclick="unlockFlight('${id}','${flightKey}')">${unlocked?'🔓 Freigeschaltet':'🔐 Scoreeingabe freischalten'}</button>
+              <button class="btn-secondary" onclick="unlockFlight('${round.id}','${flightKey}')">${unlocked?'🔓 Freigeschaltet':'🔐 Scoreeingabe freischalten'}</button>
             </div>
 
             ${courseHoles.slice(0,visibleHole).map(hole=>{
@@ -944,7 +944,7 @@
                     const e=h.entries.find(x=>x.player===p);
                     return `<tr>
                       <td>${p}</td>
-                      <td><input class="score-input" type="number" min="1" inputmode="numeric" ${unlocked?'':'disabled'} value="${scores[p]?.[String(hole.hole)]||''}" onchange="setScore('${id}','${flightKey}','${p.replace(/'/g,"\\'")}',${hole.hole},this.value)"></td>
+                      <td><input class="score-input" type="number" min="1" inputmode="numeric" ${unlocked?'':'disabled'} value="${scores[p]?.[String(hole.hole)]||''}" onchange="setScore('${round.id}','${flightKey}','${p.replace(/'/g,"\\'")}',${hole.hole},this.value)"></td>
                       <td>${e.strokes}</td><td>${e.grossSF ?? '-'}</td><td>${e.netSF ?? '-'}</td>
                     </tr>`;
                   }).join("")}</tbody>
@@ -959,13 +959,13 @@
             </div>
             <div class="match-status ${ms.cls}">${ms.text}</div>
             <div class="checkbox-grid">
-              ${flight.players.map(p=>`<label class="check-item"><input type="checkbox" ${unlocked?'':'disabled'} ${(flight.ladies||[]).includes(p)?'checked':''} onchange="toggleLady('${id}','${flightKey}','${p.replace(/'/g,"\\'")}')"><span>Lady: ${p}</span></label>`).join("")}
+              ${flight.players.map(p=>`<label class="check-item"><input type="checkbox" ${unlocked?'':'disabled'} ${(flight.ladies||[]).includes(p)?'checked':''} onchange="toggleLady('${round.id}','${flightKey}','${p.replace(/'/g,"\\'")}')"><span>Lady: ${p}</span></label>`).join("")}
             </div>
             <div class="winner-box">
               <div class="hint" style="margin:0">${computed.allComplete?`Netto-Sieger: ${computed.winner} 🟢<br>
 Brutto-Sieger: ${computed.grossWinner} 🔵<br>
 Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löchern möglich.'}</div>
-              <button class="btn-gold" ${computed.allComplete && unlocked?'':'disabled'} onclick="saveFlight('${id}','${flightKey}')">💾 Flight speichern</button>
+              <button class="btn-gold" ${computed.allComplete && unlocked?'':'disabled'} onclick="saveFlight('${round.id}','${flightKey}')">💾 Flight speichern</button>
             </div>
             ${flight.saved?`<div class="winner-tag">Gespeichert: ${flight.winner}</div><div class="loser-tag">Verlierer: ${flight.loser}</div>`:''}
             ${(flight.ladies||[]).length?`<div class="lady-tag">Gespielte Ladys: ${(flight.ladies||[]).join(", ")}</div>`:''}
@@ -974,10 +974,10 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
     }
 
     window.unlockFlight=(roundId,flightKey)=>{ const pw=prompt("Admin-Code eingeben:"); if(pw!=="Kosaido"){alert("Kein Zugriff");return;} adminUnlocked[roundId+"__"+flightKey]=true; renderRound(rounds.find(r=>r.id===roundId)); };
-    window.toggleLady=(roundId,flightKey,player)=>{ const round=rounds.find(r=>r.id===roundId); const f=flights[flightKey]; f.ladies=f.ladies||[]; f.ladies.includes(player)?f.ladies=f.ladies.filter(x=>x!==player):f.ladies.push(player); renderRound(round); };
+    window.toggleLady=(roundId,flightKey,player)=>{ const round=rounds.find(r=>r.id===roundId); const f=round.flights[flightKey]; f.ladies=f.ladies||[]; f.ladies.includes(player)?f.ladies=f.ladies.filter(x=>x!==player):f.ladies.push(player); renderRound(round); };
 
     window.saveFlight=async(roundId,flightKey)=>{
-      const round=rounds.find(r=>r.id===roundId); const flight=flights[flightKey];
+      const round=rounds.find(r=>r.id===roundId); const flight=round.flights[flightKey];
       const scores=getScores(roundId,flightKey,flight); const computed=computeFlight(flight,scores);
       if(!computed.allComplete){ alert("Bitte alle 9 Löcher vollständig eintragen."); return; }
       const cleanScores=Object.fromEntries(flight.players.map(p=>[p,Object.fromEntries(courseHoles.map(h=>[String(h.hole), Number(scores[p][String(h.hole)] || 0)]))]));
@@ -991,11 +991,11 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
         totals: Object.fromEntries(computed.ranking.map(r=>[r.player,{netSF:r.netSF,grossSF:r.grossSF,lochpunkte:r.lochpunkte,netStrokes:r.netStrokes,grossStrokes:r.grossStrokes}])),
         holes: Object.fromEntries(computed.holes.map(h=>[String(h.hole),{winners:h.winners,status:h.status}]))
       };
-      const nextFlights={...flights,[flightKey]:updatedFlight};
+      const nextFlights={...round.flights,[flightKey]:updatedFlight};
       try{
         setCloudStatus("Speichere Flight …","warn");
         await updateDoc(doc(db,ROUNDS_COLLECTION,roundId),{flights:nextFlights});
-        flights=nextFlights;
+        round.flights=nextFlights;
         delete localScores[roundId+"__"+flightKey];
         await loadRounds();
         renderRound(rounds.find(r=>r.id===roundId));
@@ -1007,8 +1007,8 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
       const stats=Object.fromEntries(allPlayers.map(p=>[p,{rounds:0,wins:0,grossWins:0,losses:0,ladies:0,totalNetSF:0,lochpunkte:0}]));
       const flightStats={};
       const history=[];
-      rounds.forEach(round=>{
-        Object.values(flights||{}).forEach(f=>{
+      rounds.forEach(round=>{ if(!round.flights) return;
+        Object.values(round.flights||{}).forEach(f=>{
           if(!f.saved) return;
           flightStats[normalizeFlight(f.players)] = (flightStats[normalizeFlight(f.players)]||0)+1;
           f.players.forEach(p=>{
@@ -1021,7 +1021,7 @@ Verlierer: ${computed.loser} 🔴`:'Speichern erst nach 9 vollständigen Löcher
           const losers = f.losers && f.losers.length ? f.losers : (f.loser ? [f.loser] : []);
           losers.forEach(loser => { if(stats[loser]) stats[loser].losses++; });
           (f.ladies||[]).forEach(p=>{ if(stats[p]) stats[p].ladies++; });
-          history.push({date:date,flight:f.players,winner:f.winner,loser:f.loser,totals:f.totals||{}});
+          history.push({date:round.date,flight:f.players,winner:f.winner,loser:f.loser,totals:f.totals||{}});
         });
       });
       return {stats,flightStats,history};
@@ -1123,7 +1123,7 @@ renderCharts(stats);
       try{
         setCloudStatus("Speichere Runde …","warn");
         const ref=await addDoc(collection(db,ROUNDS_COLLECTION),round);
-        const local={id:ref.id,date:date,flights};
+        const local={id:ref.id,date:round.date,flights};
         rounds.push(local);
         updatePlan(); renderStats(); renderRound(local); setCloudStatus("Runde gespeichert.","ok");
       }catch(e){ console.error(e); alert("Runde konnte nicht gespeichert werden."); setCloudStatus("Speichern fehlgeschlagen.","err"); }
