@@ -207,6 +207,7 @@
       .score-input{min-width:54px;padding:9px 6px}
       .card{padding:17px}
     }
+  @media(max-width:560px){#playerModal > div > div:nth-of-type(2){grid-template-columns:1fr!important} }
   </style>
 </head>
 <body>
@@ -242,31 +243,17 @@
             <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
             <button class="btn-secondary" id="allBtn">Alle auswählen</button>
             <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
+            <button class="btn-secondary" id="managePlayersBtn">👥 Spieler verwalten</button>
             <button class="btn-danger" id="resetBtn">♻️ Elite+ Cloud löschen</button>
           </div>
           <div class="hint">Runde generieren speichert den sichtbaren Wochen-Spielplan und öffnet danach direkt die Score-Eingabe.</div>
         </section>
 
         <section class="card">
-          <h2>Golf-Ranking</h2>
+          <h2>Ranking</h2>
           <table>
             <thead><tr><th>Platz</th><th>Spieler</th><th>Siege</th><th>Niederlagen</th><th>Runden</th><th>Siegquote</th></tr></thead>
             <tbody id="rankingBody"></tbody>
-          </table>
-        </section>
-        <section class="card">
-          <h2>Netto-Sieg Ranking 🏆</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Platz</th>
-                <th>Spieler</th>
-                <th>Ø Netto-SF</th>
-                <th>HCP</th>
-                <th>Wertung</th>
-              </tr>
-            </thead>
-            <tbody id="nettoRankingBody"></tbody>
           </table>
         </section>
       </div>
@@ -309,7 +296,7 @@
         <div class="chart-wrap"><canvas id="winsLossesChart"></canvas></div>
       </section>
       <section class="card">
-        <h2>Diagramm: Netto-Ranking</h2><div class="chart-wrap"><canvas id="nettoRankingChart"></canvas></div></section><section class="card"><h2>Diagramm: Netto-Stableford Ø</h2>
+        <h2>Diagramm: Netto-Stableford Ø</h2>
         <div class="chart-wrap"><canvas id="pointsChart"></canvas></div>
       </section>
     </div>
@@ -359,7 +346,7 @@
     const db = getFirestore(app);
     const ROUNDS_COLLECTION = "elite_rounds_v1";
 
-    const allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi","Dickie","Georgi","Matti"];
+    let allPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi"];
     const defaultHandicaps = {
       "Luci": 11.0, "Dolli": 16.7, "Dickie": 21.2, "Thomas Wimmer": 19.7, "Thomas Schneider": 21.0,
       "Jörg": 25.0, "Martin": 18.4, "Carsten": 15.7, "Felix": 15.2, "Carl": 10.5, "Sascha": 19.7, "Adi": 19.2
@@ -370,57 +357,6 @@
       { hole:7, par:4, index:6 }, { hole:8, par:3, index:9 }, { hole:9, par:4, index:2 }
     ];
 
-    const excelImportedResults = [
-      { date:"08.10.2025", winners:["Dickie"], losers:["Georgi"], ladies:[] },
-      { date:"15.10.2025", winners:["Georgi"], losers:[], ladies:[] },
-      { date:"22.10.2025", winners:["Carl"], losers:["Luci"], ladies:[] },
-      { date:"29.10.2025", winners:["Carl"], losers:["Martin"], ladies:["Luci"] },
-      { date:"12.11.2025", winners:["Carl"], losers:["Sascha"], ladies:["Sascha"] },
-      { date:"19.11.2025", winners:["Carl"], losers:["Georgi"], ladies:[] },
-      { date:"26.11.2025", winners:["Carl"], losers:["Sascha"], ladies:[] },
-      { date:"03.12.2025", winners:["Carl"], losers:["Sascha"], ladies:[] },
-      { date:"09.12.2025", winners:["Carl"], losers:["Sascha","Dickie"], ladies:[] },
-      { date:"13.12.2025", winners:["Dolli"], losers:["Dickie"], ladies:[] },
-      { date:"17.12.2025", winners:["Carl"], losers:["Luci"], ladies:[] },
-      { date:"21.12.2025", winners:["Carl"], losers:["Dickie"], ladies:[] },
-      { date:"03.01.2026", winners:["Luci"], losers:["Dolli"], ladies:[] },
-      { date:"30.01.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
-      { date:"04.03.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
-      { date:"12.03.2026", winners:["Carl"], losers:["Martin"], ladies:[] },
-      { date:"12.03.2026", winners:["Matti"], losers:["Dickie"], ladies:[] },
-      { date:"18.03.2026", winners:["Luci"], losers:["Sascha"], ladies:[] },
-      { date:"18.03.2026", winners:["Martin"], losers:["Thomas Wimmer"], ladies:[] },
-      { date:"01.04.2026", winners:["Luci"], losers:["Dolli"], ladies:["Martin"] },
-      { date:"15.04.2026", winners:["Sascha"], losers:["Thomas Schneider"], ladies:["Jörg"] },
-      { date:"15.04.2026", winners:["Carl"], losers:["Dickie"], ladies:["Thomas Schneider"] }
-    ];
-
-    function buildImportedRounds(){
-      return excelImportedResults.map((entry,index)=>{
-        const players=[...new Set([...(entry.winners||[]), ...(entry.losers||[]), ...(entry.ladies||[])])];
-        const winnerText=(entry.winners||[]).join(", ");
-        const loserText=(entry.losers||[]).join(", ");
-        return {
-          id:`excel_import_${index+1}`,
-          date:entry.date,
-          imported:true,
-          flights:{
-            flight1:{
-              players,
-              winner:winnerText,
-              winners:entry.winners||[],
-              loser:loserText,
-              losers:entry.losers||[],
-              ladies:entry.ladies||[],
-              saved:true,
-              imported:true,
-              totals:Object.fromEntries(players.map(p=>[p,{lochpunkte:(entry.winners||[]).includes(p)?1:0}]))
-            }
-          }
-        };
-      });
-    }
-
     let selected = new Set();
     let rounds = [];
     let handicaps = {};
@@ -430,7 +366,6 @@
     let localScores = {};
     let winsLossesChart = null;
     let pointsChart = null;
-    let nettoRankingChart = null;
 
     document.getElementById("today").innerText = new Date().toLocaleDateString("de-DE", { weekday:"long", year:"numeric", month:"long", day:"numeric" });
 
@@ -688,39 +623,21 @@
       }catch(e){ console.error(e); alert("Speichern fehlgeschlagen."); setCloudStatus("Speichern fehlgeschlagen.","err"); }
     };
 
-    function asList(value){
-      if(Array.isArray(value)) return value.filter(Boolean);
-      if(typeof value === "string" && value.trim()) return value.split(",").map(x=>x.trim()).filter(Boolean);
-      return [];
-    }
-
     function calcStats(){
-      const stats=Object.fromEntries(allPlayers.map(p=>[p,{rounds:0,wins:0,losses:0,ladies:0,totalNetSF:0,netSFRounds:0,lochpunkte:0}]));
-      const ensurePlayer=(p)=>{ if(p && !stats[p]) stats[p]={rounds:0,wins:0,losses:0,ladies:0,totalNetSF:0,netSFRounds:0,lochpunkte:0}; };
+      const stats=Object.fromEntries(allPlayers.map(p=>[p,{rounds:0,wins:0,losses:0,ladies:0,totalNetSF:0,lochpunkte:0}]));
       const flightStats={};
       const history=[];
       rounds.forEach(round=>{
         Object.values(round.flights||{}).forEach(f=>{
           if(!f.saved) return;
-          const winners=asList(f.winners).length ? asList(f.winners) : asList(f.winner);
-          const losers=asList(f.losers).length ? asList(f.losers) : asList(f.loser);
-          const ladies=asList(f.ladies);
-          const players=[...new Set([...(f.players||[]), ...winners, ...losers, ...ladies])].filter(p=>p && p!=="Unbekannt");
-          players.forEach(ensurePlayer);
-          flightStats[normalizeFlight(players)] = (flightStats[normalizeFlight(players)]||0)+1;
-          players.forEach(p=>{
-            stats[p].rounds++;
-            const netSF=f.totals?.[p]?.netSF;
-            if(typeof netSF === "number" && Number.isFinite(netSF)){
-              stats[p].totalNetSF += netSF;
-              stats[p].netSFRounds++;
-            }
-            stats[p].lochpunkte += Number(f.totals?.[p]?.lochpunkte || 0);
+          flightStats[normalizeFlight(f.players)] = (flightStats[normalizeFlight(f.players)]||0)+1;
+          f.players.forEach(p=>{
+            stats[p].rounds++; stats[p].totalNetSF += Number(f.totals?.[p]?.netSF || 0); stats[p].lochpunkte += Number(f.totals?.[p]?.lochpunkte || 0);
           });
-          winners.forEach(p=>{ ensurePlayer(p); stats[p].wins++; });
-          losers.forEach(p=>{ ensurePlayer(p); stats[p].losses++; });
-          ladies.forEach(p=>{ ensurePlayer(p); stats[p].ladies++; });
-          history.push({date:round.date,flight:players,winner:winners.join(", "),winners,loser:losers.join(", "),losers,totals:f.totals||{},imported:!!f.imported||!!round.imported});
+          if(stats[f.winner]) stats[f.winner].wins++;
+          if(stats[f.loser]) stats[f.loser].losses++;
+          (f.ladies||[]).forEach(p=>{ if(stats[p]) stats[p].ladies++; });
+          history.push({date:round.date,flight:f.players,winner:f.winner,loser:f.loser,totals:f.totals||{}});
         });
       });
       return {stats,flightStats,history};
@@ -730,7 +647,7 @@
       const {stats,flightStats,history}=calcStats();
       const rows=Object.entries(stats).sort((a,b)=>b[1].wins-a[1].wins || b[1].totalNetSF-a[1].totalNetSF || a[0].localeCompare(b[0],"de"));
       document.getElementById("rankingBody").innerHTML=rows.map(([p,s],i)=>`<tr class="${i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''}"><td>${i+1}</td><td>${p}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.rounds}</td><td>${s.rounds?Math.round(s.wins/s.rounds*100):0}%</td></tr>`).join("");
-      document.getElementById("playerStatsBody").innerHTML=Object.entries(stats).map(([p,s])=>`<tr><td>${p}</td><td>${s.rounds}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.netSFRounds?(s.totalNetSF/s.netSFRounds).toFixed(1):"–"}</td><td>${s.lochpunkte}</td><td>${s.ladies}</td></tr>`).join("");
+      document.getElementById("playerStatsBody").innerHTML=Object.entries(stats).map(([p,s])=>`<tr><td>${p}</td><td>${s.rounds}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.rounds?(s.totalNetSF/s.rounds).toFixed(1):"0.0"}</td><td>${s.lochpunkte}</td><td>${s.ladies}</td></tr>`).join("");
       const ladyKing=Object.entries(stats).sort((a,b)=>b[1].ladies-a[1].ladies)[0];
       const underdog=Object.entries(stats).sort((a,b)=>b[1].losses-a[1].losses)[0];
       document.getElementById("titlesBody").innerHTML=`<tr><td>👑 Lady King</td><td>${ladyKing?.[0]||"-"}</td><td>${ladyKing?.[1]?.ladies||0}</td></tr><tr><td>💀 Underdog</td><td>${underdog?.[0]||"-"}</td><td>${underdog?.[1]?.losses||0}</td></tr>`;
@@ -738,29 +655,7 @@
       document.getElementById("historyBody").innerHTML=history.slice().reverse().map(h=>`<tr><td>${h.date}</td><td>${h.flight.join(", ")}</td><td>${h.winner}</td><td>${h.loser}</td><td>${h.totals[h.winner]?.netSF ?? "-"}</td></tr>`).join("") || '<tr><td colspan="5" class="muted">Noch keine Historie.</td></tr>';
       renderPlayerHistory();
       updateTopStats();
-      
-      const nettoRows = Object.entries(stats)
-        .map(([p, s]) => {
-          const avgNet = s.netSFRounds ? (s.totalNetSF / s.netSFRounds) : 0;
-          const hcp = handicapValue(p) || 0;
-          const value = avgNet - (hcp / 3);
-          return { player: p, avgNet, hcp, value };
-        })
-        .sort((a, b) => b.value - a.value);
-
-      document.getElementById("nettoRankingBody").innerHTML =
-        nettoRows.map((r, i) => `
-          <tr>
-            <td>${i===0?'🏆 ':''}${i+1}</td>
-            <td>${r.player}</td>
-            <td>${r.avgNet.toFixed(1)}</td>
-            <td>${r.hcp.toFixed(1)}</td>
-            <td>${r.value.toFixed(2)}</td>
-          </tr>
-        `).join("");
-
       renderCharts(stats);
-
     }
 
     function renderPlayerHistory(){
@@ -769,7 +664,7 @@
       history.forEach(h=>{
         h.flight.forEach(p=>{
           if(filter && p!==filter) return;
-          const role=(h.winners||[]).includes(p)?"Gewinner":(h.losers||[]).includes(p)?"Verlierer":"Mitgespielt";
+          const role=p===h.winner?"Gewinner":p===h.loser?"Verlierer":"Mitgespielt";
           rows.push(`<tr><td>${h.date}</td><td>${h.flight.join(", ")}</td><td>${p}: ${role}</td><td>${h.totals[p]?.netSF ?? "-"}</td><td>${h.totals[p]?.lochpunkte ?? "-"}</td></tr>`);
         });
       });
@@ -786,29 +681,107 @@
       if(pointsChart) pointsChart.destroy();
       const options={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#667085"}}},scales:{x:{ticks:{color:"#667085"},grid:{color:"#eef2f7"}},y:{beginAtZero:true,ticks:{color:"#667085"},grid:{color:"#eef2f7"}}}};
       winsLossesChart=new Chart(document.getElementById("winsLossesChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Siege",data:labels.map(p=>stats[p].wins)},{label:"Niederlagen",data:labels.map(p=>stats[p].losses)}]},options});
-      
-      // Netto-Ranking für Chart neu berechnen
-      const nettoRows = Object.entries(stats)
-        .map(([p, s]) => {
-          const avgNet = s.netSFRounds ? (s.totalNetSF / s.netSFRounds) : 0;
-          const hcp = handicapValue(p) || 0;
-          const value = avgNet - (hcp / 3);
-          return { player: p, value };
-        })
-        .sort((a, b) => b.value - a.value);
+      pointsChart=new Chart(document.getElementById("pointsChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Ø Netto-SF",data:labels.map(p=>stats[p].rounds?+(stats[p].totalNetSF/stats[p].rounds).toFixed(1):0)}]},options});
+    }
 
-      if (nettoRankingChart) nettoRankingChart.destroy();
-      nettoRankingChart = new Chart(
-        document.getElementById("nettoRankingChart").getContext("2d"),
-        {
-          type: "bar",
-          data: {
-            labels: nettoRows.map(r => r.player),
-            datasets: [{ label: "Netto", data: nettoRows.map(r => r.value) }]
-          }
+
+    async function loadPlayerList(){
+      try{
+        const snap=await getDoc(doc(db,"meta","players"));
+        if(snap.exists() && Array.isArray(snap.data().names) && snap.data().names.length){
+          allPlayers=[...new Set(snap.data().names.map(x=>String(x).trim()).filter(Boolean))];
+        }else{
+          allPlayers=[...new Set(allPlayers)];
+          await setDoc(doc(db,"meta","players"),{names:allPlayers});
         }
-      );
-      pointsChart=new Chart(document.getElementById("pointsChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Ø Netto-SF",data:labels.map(p=>stats[p].netSFRounds?+(stats[p].totalNetSF/stats[p].netSFRounds).toFixed(1):0)}]},options});
+      }catch(e){
+        console.error("loadPlayerList",e);
+        allPlayers=[...new Set(allPlayers)];
+      }
+    }
+
+    async function savePlayerList(){
+      await setDoc(doc(db,"meta","players"),{names:[...new Set(allPlayers)]});
+    }
+
+    function renderPlayerManager(){
+      const box=document.getElementById("playerManageList");
+      if(!box) return;
+      box.innerHTML=allPlayers.map(p=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);border-radius:14px;padding:10px 12px;background:#fbfcfe;">
+          <div><strong>${p}</strong><span class="muted" style="margin-left:8px">${handicapValue(p)!==null?`HCP ${handicapValue(p).toFixed(1)}`:"kein HCP"}</span></div>
+          <button class="btn-danger btn-small" onclick="removePlayer('${p.replace(/'/g,"\\'")}')">Entfernen</button>
+        </div>`).join("");
+    }
+
+    async function addPlayer(){
+      const name=document.getElementById("newPlayerName").value.trim();
+      const raw=document.getElementById("newPlayerHcp").value.trim().replace(",",".");
+      if(!name){alert("Bitte einen Spielernamen eingeben.");return;}
+      if(allPlayers.some(p=>p.toLocaleLowerCase("de")===name.toLocaleLowerCase("de"))){
+        alert("Diesen Spieler gibt es bereits.");
+        return;
+      }
+      const hcp=Number(raw);
+      if(!Number.isFinite(hcp) || hcp<0 || hcp>54){
+        alert("Bitte ein gültiges Handicap zwischen 0,0 und 54,0 eingeben.");
+        return;
+      }
+      allPlayers.push(name);
+      handicaps[name]=hcp;
+      try{
+        setCloudStatus("Speichere neuen Spieler …","warn");
+        await savePlayerList();
+        await setDoc(doc(db,"meta","handicaps"),{values:handicaps});
+        document.getElementById("newPlayerName").value="";
+        document.getElementById("newPlayerHcp").value="";
+        renderPlayerManager();
+        renderPlayers();
+        renderHandicaps();
+        renderHistoryFilter();
+        renderAllStatsSafe();
+        updatePlan();
+        setCloudStatus("Spieler hinzugefügt.","ok");
+      }catch(e){
+        console.error("addPlayer",e);
+        allPlayers=allPlayers.filter(p=>p!==name);
+        delete handicaps[name];
+        alert("Spieler konnte nicht gespeichert werden.");
+        setCloudStatus("Spieler speichern fehlgeschlagen.","err");
+      }
+    }
+
+    async function removePlayer(player){
+      const pw=prompt("Admin-Code für das Entfernen eingeben:");
+      if(pw!=="Kosaido"){alert("Kein Zugriff");return;}
+      if(allPlayers.length<=3){alert("Mindestens 3 Spieler müssen vorhanden bleiben.");return;}
+      if(!confirm(`"${player}" aus der aktuellen Spielerliste entfernen? Alte Runden bleiben erhalten.`)) return;
+      const wasSelected=selected.has(player);
+      selected.delete(player);
+      allPlayers=allPlayers.filter(p=>p!==player);
+      delete handicaps[player];
+      try{
+        await savePlayerList();
+        await setDoc(doc(db,"meta","handicaps"),{values:handicaps});
+        if(wasSelected) updatePlan();
+        renderPlayerManager();
+        renderPlayers();
+        renderHandicaps();
+        renderHistoryFilter();
+        renderAllStatsSafe();
+        setCloudStatus("Spieler entfernt.","ok");
+      }catch(e){
+        console.error("removePlayer",e);
+        alert("Spieler konnte nicht entfernt werden.");
+      }
+    }
+    window.removePlayer=removePlayer;
+
+    function renderAllStatsSafe(){
+      try{
+        if(typeof renderStats==="function") renderStats();
+        else if(typeof renderAllStats==="function") renderAllStats();
+      }catch(e){ console.error("renderAllStatsSafe",e); }
     }
 
     async function loadHandicaps(){
@@ -835,12 +808,11 @@
       setCloudStatus("Lade Cloud-Daten …");
       try{
         const snap=await getDocs(query(collection(db,ROUNDS_COLLECTION),orderBy("createdAt","asc")));
-        const cloudRounds=snap.docs.map(d=>({id:d.id,...d.data()}));
-        rounds=[...buildImportedRounds(), ...cloudRounds];
+        rounds=snap.docs.map(d=>({id:d.id,...d.data()}));
         renderStats();
         if(rounds.length) renderRound(rounds[rounds.length-1]);
         setCloudStatus("Cloud verbunden.","ok");
-      }catch(e){ console.error(e); setCloudStatus("Offline-Modus aktiv.","warn"); rounds=[...buildImportedRounds()]; renderStats(); }
+      }catch(e){ console.error(e); setCloudStatus("Cloud-Fehler. Prüfe Firestore.","err"); }
     }
 
     window.selectAll=()=>{selected=new Set(allPlayers); updatePlan(); renderPlayers();};
@@ -871,9 +843,35 @@
     };
 
     renderHistoryFilter();
+    document.getElementById("managePlayersBtn").onclick=()=>{ renderPlayerManager(); document.getElementById("playerModal").style.display="block"; };
+    document.getElementById("closePlayerModal").onclick=()=>{ document.getElementById("playerModal").style.display="none"; };
+    document.getElementById("playerModal").addEventListener("click",e=>{ if(e.target.id==="playerModal") e.target.style.display="none"; });
+    document.getElementById("addPlayerBtn").onclick=addPlayer;
+    await loadPlayerList();
+    renderHistoryFilter();
     await loadHandicaps();
     await loadRounds();
     updatePlan();
   </script>
+
+    <div id="playerModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.35);backdrop-filter:blur(4px);z-index:9999;padding:18px;overflow:auto;">
+      <div style="max-width:620px;margin:7vh auto;background:#fff;border:1px solid var(--border);border-radius:24px;box-shadow:0 24px 70px rgba(15,23,42,.18);padding:22px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div>
+            <h2 style="margin:0 0 5px;">Spieler verwalten</h2>
+            <div class="muted">Neue Spieler werden dauerhaft in der Cloud gespeichert und stehen danach im Flightgenerator zur Verfügung.</div>
+          </div>
+          <button class="btn-secondary btn-small" id="closePlayerModal">✕</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 130px auto;gap:10px;margin-top:18px;">
+          <input id="newPlayerName" placeholder="Name">
+          <input id="newPlayerHcp" type="number" step="0.1" placeholder="HCP">
+          <button class="btn-primary" id="addPlayerBtn">＋ Hinzufügen</button>
+        </div>
+        <div class="hint">Das Entfernen ist ebenfalls passwortgeschützt. Alte Runden und Statistiken bleiben erhalten.</div>
+        <div id="playerManageList" style="display:grid;gap:8px;margin-top:18px;"></div>
+      </div>
+    </div>
+
 </body>
 </html>
