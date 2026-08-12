@@ -208,6 +208,139 @@
       .card{padding:17px}
     }
   @media(max-width:560px){#playerModal > div > div:nth-of-type(2){grid-template-columns:1fr!important} }
+  
+    /* NUR optisches Redesign der Kachel "Wochen-Spielplan" */
+    .weekplan-selected{
+      padding:4px 4px 16px;
+      border-bottom:1px solid var(--border);
+    }
+    .weekplan-selected-title{
+      font-size:13px;
+      font-weight:850;
+      letter-spacing:.02em;
+      color:var(--text);
+      margin-bottom:11px;
+    }
+    .weekplan-player-chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .weekplan-player-chip{
+      display:inline-flex;
+      align-items:center;
+      padding:7px 13px;
+      border-radius:999px;
+      background:#eef8f1;
+      border:1px solid #cfe8d7;
+      color:#075b45;
+      font-size:13px;
+      font-weight:750;
+      white-space:nowrap;
+    }
+    .weekplan-table{
+      margin-top:14px;
+      border-top:1px solid var(--border);
+    }
+    .weekplan-table-head{
+      display:grid;
+      grid-template-columns:1.05fr 1.15fr 2fr .7fr;
+      gap:12px;
+      padding:11px 10px;
+      background:#fbfcfc;
+      color:#475467;
+      font-size:10px;
+      font-weight:850;
+      letter-spacing:.03em;
+      border-bottom:1px solid var(--border);
+    }
+    .weekplan-row{
+      display:grid;
+      grid-template-columns:1.05fr 1.15fr 2fr .7fr;
+      gap:12px;
+      align-items:stretch;
+      border-bottom:1px solid #e9eeeb;
+      min-height:108px;
+    }
+    .weekplan-row:last-child{border-bottom:0}
+    .weekplan-time{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      padding:16px 10px;
+    }
+    .weekplan-time strong{
+      color:#075b45;
+      font-size:27px;
+      line-height:1;
+      letter-spacing:-.035em;
+    }
+    .weekplan-time small{
+      margin-top:8px;
+      color:#111827;
+      font-size:11px;
+    }
+    .weekplan-flight-label{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      padding:16px 10px;
+      border-left:1px solid #eef1ef;
+    }
+    .weekplan-flight-label strong{
+      color:#111827;
+      font-size:14px;
+    }
+    .weekplan-flight-label span{
+      color:#667085;
+      font-size:12px;
+      margin-top:5px;
+    }
+    .weekplan-row-players{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      padding:10px;
+      gap:5px;
+      border-left:1px solid #eef1ef;
+    }
+    .weekplan-row-players div{
+      font-size:14px;
+      line-height:1.25;
+      color:#111827;
+    }
+    .weekplan-status{
+      align-self:center;
+      justify-self:start;
+      background:#eaf7f0;
+      color:#067647;
+      border-radius:8px;
+      padding:6px 9px;
+      font-size:11px;
+      font-weight:800;
+      margin-left:4px;
+    }
+    @media(max-width:650px){
+      .weekplan-table-head{display:none}
+      .weekplan-row{
+        grid-template-columns:92px 1fr;
+        gap:0;
+        min-height:0;
+      }
+      .weekplan-time{border-bottom:1px solid #eef1ef}
+      .weekplan-flight-label{border-left:1px solid #eef1ef;border-bottom:1px solid #eef1ef}
+      .weekplan-row-players{
+        grid-column:1 / -1;
+        border-left:0;
+        padding:12px 10px;
+      }
+      .weekplan-status{
+        grid-column:1 / -1;
+        margin:0 10px 12px;
+        justify-self:start;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -525,13 +658,48 @@
     }
     function renderWeekPlan(groups){
       const el=document.getElementById("weekPlanOutput");
-      if(!groups?.length){ el.innerHTML='<div class="muted">Noch kein Spielplan erstellt.</div>'; return; }
-      el.innerHTML=groups.map((g,i)=>`
-        <div class="flight">
-          <h3>Vorschlag ${i+1}</h3>
-          <div class="chips">${g.map(p=>`<span class="chip">${p}</span>`).join("")}</div>
-          <div class="flight-meta">Ø Handicap: ${groupHcpAvg(g)?.toFixed(1) || "offen"}</div>
-        </div>`).join("");
+      if(!groups?.length){
+        el.innerHTML='<div class="muted">Noch kein Spielplan erstellt.</div>';
+        return;
+      }
+
+      const selectedPlayers=[...selected];
+      const teeTimes=["17:20","17:30","17:40","17:50","18:00","18:10"];
+
+      el.innerHTML=`
+        <div class="weekplan-selected">
+          <div class="weekplan-selected-title">AUSGEWÄHLTE SPIELER (${selectedPlayers.length})</div>
+          <div class="weekplan-player-chips">
+            ${selectedPlayers.map(p=>`<span class="weekplan-player-chip">${p}</span>`).join("")}
+          </div>
+        </div>
+
+        <div class="weekplan-table">
+          <div class="weekplan-table-head">
+            <span>TEE TIME</span>
+            <span>FLIGHT / TEE</span>
+            <span>SPIELER</span>
+            <span>STATUS</span>
+          </div>
+
+          ${groups.map((g,i)=>`
+            <div class="weekplan-row">
+              <div class="weekplan-time">
+                <strong>${teeTimes[i] || "–"}</strong>
+                <small>TEE 1</small>
+              </div>
+              <div class="weekplan-flight-label">
+                <strong>Flight ${i+1}</strong>
+                <span>TEE 1</span>
+              </div>
+              <div class="weekplan-row-players">
+                ${g.map(p=>`<div>${p}</div>`).join("")}
+              </div>
+              <div class="weekplan-status">Geplant</div>
+            </div>
+          `).join("")}
+        </div>
+      `;
     }
 
     function renderRound(round){
