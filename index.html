@@ -260,6 +260,10 @@
     @media(max-width:800px){.elite-shell{display:block}.elite-sidebar{border-right:0;border-bottom:1px solid #e9edf2}.elite-nav{grid-template-columns:repeat(3,1fr);margin-top:20px}.elite-nav a{justify-content:center;font-size:13px}.elite-sidebar-footer{display:none}.elite-main{padding:20px}.elite-stats{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:560px){.elite-nav{grid-template-columns:repeat(2,1fr)}.elite-welcome{display:block}.elite-welcome h1{font-size:30px}.elite-welcome .status{margin-top:12px}.elite-stats{grid-template-columns:1fr}.tee-header{display:none}.tee-flight{grid-template-columns:1fr}.tee-time{border-right:0;border-bottom:1px solid #e7ebef;padding:16px 12px}.tee-time strong{font-size:29px}.tee-players>div{font-size:14px}.dash-ranking-head{grid-template-columns:.5fr 1.5fr 1fr .55fr;font-size:9px}.dash-rank-row{grid-template-columns:.5fr 1.5fr 1fr .55fr;font-size:13px}}
 
+  
+    .schedule-saved{color:#067647!important;font-weight:800}
+    .tee-players em{font-size:12px}
+
   </style>
 </head>
 <body>
@@ -310,26 +314,9 @@
               <h2>▣ SPIELPLAN – AKTUELLE WOCHE</h2>
               <span class="elite-date" id="dashDate"></span>
             </div>
-            <div class="tee-table">
+            <div class="tee-table" id="currentWeekTeeTable">
               <div class="tee-header"><span>TEE TIME</span><span>FLIGHT / TEE</span><span>SPIELER</span><span>STATUS</span></div>
-              <div class="tee-flight">
-                <div class="tee-time"><b>FLIGHT 1</b><strong>17:20</strong><span>TEE 1</span></div>
-                <div class="tee-players">
-                  <div>Peter Radonjoc <em>–</em></div>
-                  <div>Nils Böcker <em>–</em></div>
-                  <div>Tim Marsall <em>–</em></div>
-                  <div>Martin Siermann <em>–</em></div>
-                </div>
-              </div>
-              <div class="tee-flight">
-                <div class="tee-time"><b>FLIGHT 2</b><strong>17:30</strong><span>TEE 1</span></div>
-                <div class="tee-players">
-                  <div>Luci Schreiber <em>–</em></div>
-                  <div>Dolli Doll <em>–</em></div>
-                  <div>Carl Irmer <em>–</em></div>
-                  <div>Markus Dickie <em>–</em></div>
-                </div>
-              </div>
+              <div class="muted" id="currentWeekEmpty" style="padding:22px 10px;">Noch keine aktuelle Runde generiert.</div>
             </div>
             <button class="elite-full-btn" onclick="document.getElementById('playersSection').scrollIntoView({behavior:'smooth'})">▣ Tee Times als PDF exportieren</button>
             <div class="elite-footnote">Alle Tee Times sind vorläufig und können sich ändern.</div>
@@ -651,7 +638,31 @@
         </div>`).join("");
     }
 
+
+    function renderCurrentWeekSchedule(round){
+      const table=document.getElementById("currentWeekTeeTable");
+      if(!table) return;
+      const header=`<div class="tee-header"><span>TEE TIME</span><span>FLIGHT / TEE</span><span>SPIELER</span><span>STATUS</span></div>`;
+      if(!round || !round.flights || !Object.keys(round.flights).length){
+        table.innerHTML=header+`<div class="muted" id="currentWeekEmpty" style="padding:22px 10px;">Noch keine aktuelle Runde generiert.</div>`;
+        return;
+      }
+      const times=["17:20","17:30","17:40","17:50","18:00","18:10","18:20","18:30"];
+      const rows=Object.entries(round.flights).map(([key,f],i)=>{
+        const scores=getScores(round.id,key,f);
+        const c=computeFlight(f,scores);
+        const status=f.saved ? `✓ ${f.winner||"gespeichert"}` : (c.completeHoles ? `${c.completeHoles}/9 Löcher` : "offen");
+        const statusClass=f.saved ? "schedule-saved" : "";
+        return `<div class="tee-flight">
+          <div class="tee-time"><b>FLIGHT ${i+1}</b><strong>${times[i]||"–"}</strong><span>TEE 1</span></div>
+          <div class="tee-players">${(f.players||[]).map(p=>`<div>${p}<em>${status}</em></div>`).join("")}</div>
+        </div>`;
+      }).join("");
+      table.innerHTML=header+rows;
+    }
+
     function renderRound(round){
+      renderCurrentWeekSchedule(round);
       if(!round){ document.getElementById("output").innerHTML='<div class="muted">Noch keine Runde erzeugt.</div>'; return; }
       const flights=Object.entries(round.flights||{});
       document.getElementById("output").innerHTML=flights.map(([flightKey,flight],idx)=>{
@@ -962,7 +973,13 @@
         const snap=await getDocs(query(collection(db,ROUNDS_COLLECTION),orderBy("createdAt","asc")));
         rounds=snap.docs.map(d=>({id:d.id,...d.data()}));
         renderStats();
-        if(rounds.length) renderRound(rounds[rounds.length-1]);
+        if(rounds.length) {
+          const latest=rounds[rounds.length-1];
+          renderCurrentWeekSchedule(latest);
+          renderRound(latest);
+        } else {
+          renderCurrentWeekSchedule(null);
+        }
         setCloudStatus("Cloud verbunden.","ok");
       }catch(e){ console.error(e); setCloudStatus("Cloud-Fehler. Prüfe Firestore.","err"); }
     }
@@ -984,7 +1001,13 @@
         const ref=await addDoc(collection(db,ROUNDS_COLLECTION),round);
         const local={id:ref.id,date:round.date,flights};
         rounds.push(local);
-        updatePlan(); renderStats(); renderRound(local); setCloudStatus("Runde gespeichert.","ok");
+        plannedGroups=groups;
+        renderWeekPlan(groups);
+        renderCurrentWeekSchedule(local);
+        updatePlan();
+        renderStats();
+        renderRound(local);
+        setCloudStatus("Runde gespeichert.","ok");
       }catch(e){ console.error(e); alert("Runde konnte nicht gespeichert werden."); setCloudStatus("Speichern fehlgeschlagen.","err"); }
     };
     document.getElementById("resetBtn").onclick=async()=>{
