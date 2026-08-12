@@ -809,18 +809,27 @@
 
 
     async function loadPlayerList(){
+      // WICHTIG: Die lokale Startliste bleibt immer die Sicherheitskopie.
+      // Ein leerer/kaputter Cloud-Eintrag darf niemals die komplette Spielerliste löschen.
+      const fallbackPlayers = ["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi"];
       try{
         const snap=await getDoc(doc(db,"meta","players"));
-        if(snap.exists() && Array.isArray(snap.data().names) && snap.data().names.length){
-          allPlayers=[...new Set(snap.data().names.map(x=>String(x).trim()).filter(Boolean))];
+        const cloudNames = snap.exists() && Array.isArray(snap.data().names)
+          ? [...new Set(snap.data().names.map(x=>String(x).trim()).filter(Boolean))]
+          : [];
+
+        if(cloudNames.length >= 3){
+          allPlayers = cloudNames;
         }else{
-          allPlayers=[...new Set(allPlayers)];
+          allPlayers = [...fallbackPlayers];
           await setDoc(doc(db,"meta","players"),{names:allPlayers});
         }
       }catch(e){
         console.error("loadPlayerList",e);
-        allPlayers=[...new Set(allPlayers)];
+        allPlayers = [...fallbackPlayers];
+        // Die App funktioniert auch bei einem temporären Cloud-Fehler lokal weiter.
       }
+      allPlayers = [...new Set(allPlayers)];
     }
 
     async function savePlayerList(){
@@ -837,7 +846,26 @@
         </div>`).join("");
     }
 
-    async function addPlayer(){
+    async function restoreDefaultPlayers(){
+      const pw=prompt("Admin-Code für die Wiederherstellung eingeben:");
+      if(pw!=="Kosaido"){alert("Kein Zugriff");return;}
+      const defaults=["Luci","Dolli","Dickie","Thomas Wimmer","Thomas Schneider","Jörg","Martin","Carsten","Felix","Carl","Sascha","Adi"];
+      allPlayers=[...defaults];
+      try{
+        await setDoc(doc(db,"meta","players"),{names:allPlayers});
+        renderPlayerManager();
+        renderPlayers();
+        renderHandicaps();
+        renderHistoryFilter();
+        renderAllStatsSafe();
+        updatePlan();
+        setCloudStatus("Standard-Spielerliste wiederhergestellt.","ok");
+      }catch(e){
+        console.error("restoreDefaultPlayers",e);
+        alert("Wiederherstellung konnte nicht gespeichert werden.");
+      }
+    }
+        async function addPlayer(){
       const name=document.getElementById("newPlayerName").value.trim();
       const raw=document.getElementById("newPlayerHcp").value.trim().replace(",",".");
       if(!name){alert("Bitte einen Spielernamen eingeben.");return;}
@@ -970,6 +998,7 @@
     document.getElementById("closePlayerModal").onclick=()=>{ document.getElementById("playerModal").style.display="none"; };
     document.getElementById("playerModal").addEventListener("click",e=>{ if(e.target.id==="playerModal") e.target.style.display="none"; });
     document.getElementById("addPlayerBtn").onclick=addPlayer;
+    document.getElementById("restorePlayersBtn").onclick=restoreDefaultPlayers;
     await loadPlayerList();
     renderHistoryFilter();
     await loadHandicaps();
@@ -990,6 +1019,7 @@
           <input id="newPlayerName" placeholder="Name">
           <input id="newPlayerHcp" type="number" step="0.1" placeholder="HCP">
           <button class="btn-primary" id="addPlayerBtn">＋ Hinzufügen</button>
+          <button class="btn-secondary" id="restorePlayersBtn">↻ Standardliste wiederherstellen</button>
         </div>
         <div class="hint">Das Entfernen ist ebenfalls passwortgeschützt. Alte Runden und Statistiken bleiben erhalten.</div>
         <div id="playerManageList" style="display:grid;gap:8px;margin-top:18px;"></div>
