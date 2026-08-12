@@ -341,6 +341,248 @@
       }
     }
 
+  
+/* =========================================================
+   REFERENCE DESIGN – NUR OPTIK
+   Keine Änderung an JavaScript, Daten, Rankings oder Funktionen.
+   ========================================================= */
+
+body{
+  background:#f4f6f7 !important;
+  color:#111827;
+}
+.wrap{
+  max-width:1400px !important;
+  padding:22px !important;
+}
+
+/* Main top area / dashboard */
+.hero{
+  display:grid !important;
+  grid-template-columns:270px minmax(0,1fr) !important;
+  gap:0 !important;
+  padding:0 !important;
+  background:#fff !important;
+  border:1px solid #e2e8e5 !important;
+  border-radius:28px !important;
+  box-shadow:0 14px 38px rgba(15,23,42,.07) !important;
+  overflow:hidden !important;
+}
+
+/* Left navigation area */
+.hero-left{
+  background:#fff !important;
+  border-right:1px solid #e3e8e5 !important;
+  padding:28px 20px !important;
+  display:flex !important;
+  flex-direction:column !important;
+}
+.hero-left .brand,
+.hero-left .brand-logo,
+.hero-left .logo{
+  text-align:center !important;
+}
+.hero-left img{
+  max-width:128px !important;
+  max-height:128px !important;
+  object-fit:contain !important;
+  margin:0 auto 12px !important;
+}
+.hero-left h1,
+.hero-left h2,
+.hero-left .brand-title{
+  color:#075b45 !important;
+  font-weight:900 !important;
+}
+.hero-left .muted,
+.hero-left .sub{
+  color:#667085 !important;
+}
+
+/* Existing navigation items, if present */
+.hero-left nav,
+.sidebar nav{
+  display:grid !important;
+  gap:7px !important;
+  margin-top:30px !important;
+}
+.hero-left nav a,
+.sidebar nav a{
+  color:#111827 !important;
+  text-decoration:none !important;
+  border-radius:11px !important;
+  padding:12px 14px !important;
+}
+.hero-left nav a:hover,
+.hero-left nav a.active,
+.sidebar nav a:hover,
+.sidebar nav a.active{
+  background:#075b45 !important;
+  color:#fff !important;
+}
+
+/* Main dashboard content */
+.hero-right{
+  padding:30px 32px !important;
+  background:#fff !important;
+}
+.hero-right .title,
+.hero-right h1,
+.hero-right h2{
+  color:#073f30 !important;
+}
+.hero-right .sub{
+  color:#111827 !important;
+}
+
+/* KPI cards */
+.stats,
+.top-stats,
+.stat-grid{
+  gap:14px !important;
+}
+.stat{
+  background:#fff !important;
+  border:1px solid #e3e9e6 !important;
+  border-radius:15px !important;
+  box-shadow:0 5px 16px rgba(15,23,42,.045) !important;
+}
+.stat .v{
+  color:#073f30 !important;
+}
+
+/* Cards */
+.card{
+  background:#fff !important;
+  border:1px solid #e2e9e5 !important;
+  border-radius:17px !important;
+  box-shadow:0 5px 18px rgba(15,23,42,.045) !important;
+}
+.card h2{
+  color:#075b45 !important;
+}
+
+/* Weekly plan: reference-style left field arrangement */
+.weekplan-table{
+  border-top:1px solid #e3e9e6 !important;
+}
+.weekplan-table-head{
+  background:#fbfcfc !important;
+  color:#344054 !important;
+  border-bottom:1px solid #e3e9e6 !important;
+}
+.weekplan-row{
+  background:#fff !important;
+  grid-template-columns:1.05fr 1.15fr 2.2fr .72fr !important;
+  border-bottom:1px solid #e7ece9 !important;
+}
+.weekplan-time{
+  padding:18px 14px !important;
+  background:#fff !important;
+}
+.weekplan-time strong{
+  font-size:31px !important;
+  color:#075b45 !important;
+}
+.weekplan-time small{
+  color:#111827 !important;
+}
+.weekplan-flight-label{
+  padding:18px 14px !important;
+  border-left:1px solid #e7ece9 !important;
+}
+.weekplan-flight-label strong{
+  color:#111827 !important;
+  font-size:15px !important;
+}
+.weekplan-flight-label span{
+  color:#667085 !important;
+}
+.weekplan-row-players{
+  padding:14px !important;
+  border-left:1px solid #e7ece9 !important;
+  gap:7px !important;
+}
+.weekplan-row-players div{
+  font-size:15px !important;
+}
+.weekplan-status{
+  background:#eaf7f0 !important;
+  color:#067647 !important;
+  border-radius:8px !important;
+  padding:6px 9px !important;
+}
+
+/* Selected-player chips */
+.weekplan-selected{
+  background:#fff !important;
+  border-bottom:1px solid #e3e9e6 !important;
+}
+.weekplan-selected-title{
+  color:#073f30 !important;
+}
+.weekplan-player-chip{
+  background:#eef8f1 !important;
+  border:1px solid #cfe8d7 !important;
+  color:#075b45 !important;
+}
+
+/* Buttons */
+.btn-primary{
+  background:#20c45a !important;
+  border-color:#20c45a !important;
+}
+.btn-secondary{
+  background:#fff !important;
+  border-color:#dfe7e2 !important;
+}
+.btn-danger{
+  background:#fff7f8 !important;
+  border-color:#f1d1d6 !important;
+}
+
+/* Keep the reference's generous white space */
+.grid{
+  gap:20px !important;
+}
+
+/* Mobile */
+@media(max-width:900px){
+  .hero{
+    grid-template-columns:1fr !important;
+  }
+  .hero-left{
+    border-right:0 !important;
+    border-bottom:1px solid #e3e8e5 !important;
+  }
+  .hero-right{
+    padding:20px !important;
+  }
+}
+@media(max-width:650px){
+  .weekplan-row{
+    grid-template-columns:92px 1fr !important;
+  }
+}
+
+  
+    /* Wetter-Kachel – nur Darstellung */
+    .weather-card{min-height:220px}
+    .weather-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
+    .weather-head h2{margin-bottom:4px}
+    .weather-date{font-size:13px;color:#667085}
+    .weather-location{font-size:12px;font-weight:800;color:#075b45;background:#eaf7f0;border:1px solid #c9ead6;padding:7px 11px;border-radius:999px}
+    .weather-content{margin-top:15px}
+    .weather-main{display:grid;grid-template-columns:1.15fr 1fr 1fr 1fr;gap:10px}
+    .weather-temp{background:#f7faf8;border:1px solid #e3ebe6;border-radius:14px;padding:14px}
+    .weather-temp strong{display:block;font-size:31px;color:#075b45;line-height:1}
+    .weather-temp span{display:block;margin-top:7px;font-size:13px;color:#344054}
+    .weather-metric{background:#fff;border:1px solid #e3e9e6;border-radius:14px;padding:13px}
+    .weather-metric b{display:block;font-size:20px;color:#111827}
+    .weather-metric small{display:block;color:#667085;margin-top:5px;font-size:12px}
+    .weather-summary{margin-top:12px;font-size:13px;color:#475467}
+    @media(max-width:700px){.weather-main{grid-template-columns:1fr 1fr}.weather-temp{grid-column:1/-1}}
+
   </style>
 </head>
 <body>
@@ -397,10 +639,17 @@
           <div id="weekPlanOutput" class="weekplan"><div class="muted">Noch kein Spielplan erstellt.</div></div>
           <div class="hint">Der Vorschlag wird automatisch aktualisiert und ist die nächste Runde.</div>
         </section>
-
-        <section class="card">
-          <h2>Flights & Ergebnisse</h2>
-          <div id="output" class="output-grid"><div class="muted">Noch keine Runde erzeugt.</div></div>
+        <section class="card weather-card" id="weatherCard">
+          <div class="weather-head">
+            <div>
+              <h2>☀️ Wetter Düsseldorf</h2>
+              <div class="weather-date" id="weatherDate">Lade Wetter …</div>
+            </div>
+            <div class="weather-location">Düsseldorf</div>
+          </div>
+          <div id="weatherContent" class="weather-content">
+            <div class="muted">Aktuelle Wettervorhersage wird geladen …</div>
+          </div>
         </section>
       </div>
     </div>
@@ -461,7 +710,14 @@
     </section>
   </div>
 
-  <script type="module">
+  
+
+        <section class="card">
+          <h2>Flights & Ergebnisse</h2>
+          <div id="output" class="output-grid"><div class="muted">Noch keine Runde erzeugt.</div></div>
+        </section>
+
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, getDocs, addDoc, query, orderBy, serverTimestamp, writeBatch, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -972,6 +1228,63 @@
       renderPlayers(); renderHandicaps(); updatePlan();
     };
 
+
+    async function loadDusseldorfWeather(){
+      const dateEl=document.getElementById("weatherDate");
+      const content=document.getElementById("weatherContent");
+      if(!dateEl || !content) return;
+
+      const today=new Date();
+      const dateLabel=today.toLocaleDateString("de-DE",{weekday:"long",day:"2-digit",month:"2-digit",year:"numeric"});
+      dateEl.textContent=dateLabel;
+
+      try{
+        const url="https://api.open-meteo.com/v1/forecast?latitude=51.2277&longitude=6.7735&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=1";
+        const res=await fetch(url);
+        if(!res.ok) throw new Error("Weather request failed");
+        const w=await res.json();
+
+        const code=Number(w.daily.weather_code?.[0] ?? w.current.weather_code);
+        const labels={
+          0:["☀️","Klarer Himmel"],1:["🌤️","Überwiegend klar"],2:["⛅","Teilweise bewölkt"],3:["☁️","Bedeckt"],
+          45:["🌫️","Nebel"],48:["🌫️","Reifnebel"],51:["🌦️","Leichter Nieselregen"],53:["🌦️","Nieselregen"],
+          55:["🌧️","Stärkerer Nieselregen"],61:["🌦️","Leichter Regen"],63:["🌧️","Regen"],65:["🌧️","Starker Regen"],
+          71:["🌨️","Leichter Schneefall"],73:["🌨️","Schneefall"],75:["❄️","Starker Schneefall"],
+          80:["🌦️","Regenschauer"],81:["🌧️","Regenschauer"],82:["⛈️","Starke Regenschauer"],
+          95:["⛈️","Gewitter"],96:["⛈️","Gewitter mit Hagel"],99:["⛈️","Starkes Gewitter"]
+        };
+        const info=labels[code] || ["🌤️","Wechselhaft"];
+        const current=w.current;
+        const daily=w.daily;
+
+        const fmtTime=(iso)=>iso?new Date(iso).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}):"–";
+        content.innerHTML=`
+          <div class="weather-main">
+            <div class="weather-temp">
+              <strong>${Math.round(daily.temperature_2m_max[0])}° / ${Math.round(daily.temperature_2m_min[0])}°</strong>
+              <span>${info[0]} ${info[1]}</span>
+            </div>
+            <div class="weather-metric">
+              <b>${Math.round(current.temperature_2m)} °C</b>
+              <small>aktuell · gefühlt ${Math.round(current.apparent_temperature)} °C</small>
+            </div>
+            <div class="weather-metric">
+              <b>${daily.precipitation_probability_max[0]} %</b>
+              <small>Regenwahrscheinlichkeit</small>
+            </div>
+            <div class="weather-metric">
+              <b>${Math.round(current.wind_speed_10m)} km/h</b>
+              <small>Wind · Sonnenaufgang ${fmtTime(daily.sunrise[0])}</small>
+            </div>
+          </div>
+          <div class="weather-summary">Heute in Düsseldorf: ${info[1]}. Sonnenuntergang ${fmtTime(daily.sunset[0])}.</div>
+        `;
+      }catch(e){
+        console.error("Düsseldorf weather",e);
+        content.innerHTML='<div class="muted">Wetterdaten konnten gerade nicht geladen werden.</div>';
+      }
+    }
+
     async function loadRounds(){
       setCloudStatus("Lade Cloud-Daten …");
       try{
@@ -1010,6 +1323,7 @@
       rounds=[]; renderStats(); renderRound(null); updatePlan(); setCloudStatus("Elite+ Cloud gelöscht.","ok");
     };
 
+    loadDusseldorfWeather();
     renderHistoryFilter();
     document.getElementById("managePlayersBtn").onclick=()=>{ renderPlayerManager(); document.getElementById("playerModal").style.display="block"; };
     document.getElementById("closePlayerModal").onclick=()=>{ document.getElementById("playerModal").style.display="none"; };
