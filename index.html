@@ -729,6 +729,14 @@ body{
             <strong>Deine aktuelle Flight Card als Bild</strong>
             <span>Optimiert für WhatsApp & Co.</span>
           </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 14px;">
+            <label for="nearestToPinHole" style="font-weight:800;color:#075b45;">🎯 Nearest to the Pin</label>
+            <select id="nearestToPinHole" onchange="setNearestToPin(this.value)"
+              style="min-width:150px;padding:10px 12px;border:1px solid #d6e0da;border-radius:10px;background:#fff;font-weight:700;color:#111827;">
+              <option value="">Kein NTP-Loch</option>
+              ${Array.from({length:18},(_,i)=>`<option value="${i+1}">Loch ${i+1}</option>`).join("")}
+            </select>
+          </div>
           <button class="btn-primary" id="exportFlightCardBtn">📤 Flight Card als Bild exportieren</button>
           <div id="exportStatus" class="muted" style="margin-top:8px;"></div>
         </section>
@@ -769,6 +777,7 @@ body{
     let handicaps = {};
     let plannedGroups = null;
     let teeTimes = ["17:20","17:30","17:40","17:50","18:00","18:10"];
+    let nearestToPinHole = "";
     let selectedHistoryPlayer = "";
     let adminUnlocked = {};
     let localScores = {};
@@ -1352,6 +1361,8 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
       ctx.restore();
     }
 
+    window.setNearestToPin=(value)=>{ nearestToPinHole=value || ""; };
+
     async function exportFlightCard(){
       const status=document.getElementById("exportStatus");
       const groups=(typeof plannedGroups!=="undefined" && Array.isArray(plannedGroups)) ? plannedGroups : [];
@@ -1371,8 +1382,9 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
         const gap=24;
         const courseH=390;
         const footer=56;
+        const ntpH=nearestToPinHole ? 82 : 0;
 
-        let h=header+title+weatherH+24+footer+courseH;
+        let h=header+title+weatherH+24+ntpH+footer+courseH;
         groups.forEach(g=>h+=flightHead+Math.max(1,g.length)*playerH+gap);
 
         const canvas=document.createElement("canvas");
@@ -1475,6 +1487,18 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
           if(line && ly2<=y+130) ctx.fillText(line,68,ly2);
 
           y+=weatherH+24;
+
+          if(nearestToPinHole){
+            drawRoundRect(ctx,40,y,W-80,ntpH,18,"#fff8dc","#e3b51b");
+            ctx.textAlign="left";
+            ctx.fillStyle="#075b45";
+            ctx.font="900 25px Arial";
+            ctx.fillText("🎯  NEAREST TO THE PIN",68,y+34);
+            ctx.fillStyle="#111827";
+            ctx.font="800 23px Arial";
+            ctx.fillText(`Loch ${nearestToPinHole}`,68,y+64);
+            y+=ntpH+18;
+          }
 
           // Approved beer + golf course image.
           drawCover(ctx,beerImg,0,y,W,courseH);
