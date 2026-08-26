@@ -269,6 +269,8 @@
       justify-content:center;
       padding:16px 10px;
     }
+    .tee-time-input{width:128px;padding:8px 10px;border:1px solid #cfdad4;border-radius:10px;background:#fff;color:#075b45;font-size:26px;font-weight:800;box-sizing:border-box;}
+    .tee-time-input:focus{outline:none;border-color:#075b45;box-shadow:0 0 0 3px rgba(7,91,69,.12);}
     .weekplan-time strong{
       color:#075b45;
       font-size:27px;
@@ -642,6 +644,7 @@ body{
         <section class="card">
           <h2>Wochen-Spielplan</h2>
           <div id="weekPlanOutput" class="weekplan"><div class="muted">Noch kein Spielplan erstellt.</div></div>
+          <div class="hint" style="margin-top:10px">💡 Die Tee Times kannst Du direkt im Spielplan ändern. Beim Generieren werden sie mit dem Flight gespeichert und auch für die Flight Card verwendet.</div>
           <div class="hint">Der Vorschlag wird automatisch aktualisiert und ist die nächste Runde.</div>
         </section>
         <section class="card weather-card" id="weatherCard">
@@ -765,6 +768,7 @@ body{
     let rounds = [];
     let handicaps = {};
     let plannedGroups = null;
+    let teeTimes = ["17:20","17:30","17:40","17:50","18:00","18:10"];
     let selectedHistoryPlayer = "";
     let adminUnlocked = {};
     let localScores = {};
@@ -927,6 +931,11 @@ body{
       plannedGroups=createGroups(players);
       renderWeekPlan(plannedGroups);
     }
+    window.setTeeTime=(index,value)=>{
+      teeTimes[index]=value || "";
+      renderWeekPlan(plannedGroups || []);
+    };
+
     function renderWeekPlan(groups){
       const el=document.getElementById("weekPlanOutput");
       if(!groups?.length){
@@ -935,8 +944,6 @@ body{
       }
 
       const selectedPlayers=[...selected];
-      const teeTimes=["17:20","17:30","17:40","17:50","18:00","18:10"];
-
       el.innerHTML=`
         <div class="weekplan-selected">
           <div class="weekplan-selected-title">AUSGEWÄHLTE SPIELER (${selectedPlayers.length})</div>
@@ -956,8 +963,8 @@ body{
           ${groups.map((g,i)=>`
             <div class="weekplan-row">
               <div class="weekplan-time">
-                <strong>${teeTimes[i] || "–"}</strong>
-                <small>TEE 1</small>
+                <input class="tee-time-input" type="time" value="${teeTimes[i] || ""}" onchange="setTeeTime(${i},this.value)" aria-label="Tee Time Flight ${i+1}">
+                <small>TEE 1 · Zeit selbst festlegen</small>
               </div>
               <div class="weekplan-flight-label">
                 <strong>Flight ${i+1}</strong>
@@ -984,7 +991,7 @@ body{
         const ms=matchStatus(computed);
         return `
           <div class="flight">
-            <h3>Flight ${idx+1}</h3>
+            <h3>Flight ${idx+1}${flight.teeTime?` · ${flight.teeTime}`:''}</h3>
             <div class="chips">${flight.players.map(p=>`<span class="chip ${computed.allComplete && computed.winner===p?'winner':''} ${computed.allComplete && computed.loser===p?'loser':''} ${(flight.ladies||[]).includes(p)?'lady':''}">${p}</span>`).join("")}</div>
             <div class="flight-meta">Netto-Stableford ist Hauptwertung. Lochpunkt: höchster Netto-SF pro Loch; bei Gleichstand erhalten alle Punkt.</div>
             <div class="winner-box">
@@ -1042,6 +1049,7 @@ body{
       const cleanScores=Object.fromEntries(flight.players.map(p=>[p,Object.fromEntries(courseHoles.map(h=>[String(h.hole), Number(scores[p][String(h.hole)] || 0)]))]));
       const updatedFlight={
         players: flight.players,
+        teeTime: flight.teeTime || "",
         scores: cleanScores,
         ladies: flight.ladies || [],
         winner: computed.winner,
@@ -1391,8 +1399,6 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
           ctx.fillText(date,W/2,header+94);
 
           let y=header+title;
-          const times=["17:20","17:30","17:40","17:50","18:00","18:10"];
-
           groups.forEach((g,i)=>{
             const boxH=flightHead+Math.max(1,g.length)*playerH;
             drawRoundRect(ctx,40,y,W-80,boxH,18,"#fff","#d6e0da");
@@ -1408,7 +1414,8 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
 
             ctx.textAlign="right";
             ctx.font="800 27px Arial";
-            ctx.fillText(`◷ ${times[i]||"–"}`,W-65,y+48);
+            const exportTime=teeTimes[i] || "–";
+            ctx.fillText(`◷ ${exportTime}`,W-65,y+48);
 
             g.forEach((name,j)=>{
               const yy=y+flightHead+40+j*playerH;
@@ -1526,7 +1533,7 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
     document.getElementById("generateBtn").onclick=async()=>{
       const players=[...selected]; if(players.length<3){alert("Bitte mindestens 3 Spieler auswählen.");return;}
       const groups=plannedGroups && normalizeFlight(plannedGroups.flat())===normalizeFlight(players) ? plannedGroups : createGroups(players);
-      const flights=Object.fromEntries(groups.map((g,i)=>[`flight${i+1}`,{players:g,scores:emptyScores(g),ladies:[],saved:false}]));
+      const flights=Object.fromEntries(groups.map((g,i)=>[`flight${i+1}`,{players:g,scores:emptyScores(g),ladies:[],saved:false,teeTime:teeTimes[i] || ""}]));
       const round={date:new Date().toLocaleDateString("de-DE"),createdAt:serverTimestamp(),flights};
       try{
         setCloudStatus("Speichere Runde …","warn");
