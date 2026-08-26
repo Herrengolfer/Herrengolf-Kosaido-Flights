@@ -809,9 +809,16 @@ body{
     function createGroups(players){
       const layout=getLayout(players.length);
       let best=Infinity, candidates=[];
-      for(let a=0;a<5000;a++){
+      const historyIndex=new Map();
+      rounds.forEach(r=>Object.values(r.flights||{}).forEach(f=>{
+        const key=normalizeFlight(f.players||[]);
+        historyIndex.set(key,(historyIndex.get(key)||0)+1);
+      }));
+      const ITERATIONS=800;
+      for(let a=0;a<ITERATIONS;a++){
         const groups=buildGroups(shuffle(players), layout);
-        const score=groups.reduce((s,g)=>s+flightHistoryCount(g),0)+hcpPenalty(groups);
+        let score=hcpPenalty(groups);
+        for(const g of groups) score += historyIndex.get(normalizeFlight(g)) || 0;
         if(score<best){ best=score; candidates=[groups]; }
         else if(score<=best+0.75){ candidates.push(groups); }
       }
@@ -923,7 +930,11 @@ body{
       }).join("");
       updateTopStats();
     }
-    window.togglePlayer=(name)=>{ selected.has(name)?selected.delete(name):selected.add(name); updatePlan(); renderPlayers(); };
+    window.togglePlayer=(name)=>{
+      selected.has(name)?selected.delete(name):selected.add(name);
+      renderPlayers();
+      requestAnimationFrame(()=>updatePlan());
+    };
 
     function updatePlan(){
       const players=[...selected];
