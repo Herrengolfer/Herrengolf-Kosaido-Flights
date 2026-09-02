@@ -622,13 +622,14 @@ body{
           <div class="players" id="players"></div>
           <div class="toolbar">
             <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
+            <button class="btn-secondary" id="wishFlightBtn">⭐ Wunsch-Flight</button>
             <button class="btn-secondary" id="lastBtn">🕘 Letzte Runde</button>
             <button class="btn-secondary" id="allBtn">Alle auswählen</button>
             <button class="btn-secondary" id="clearBtn">Auswahl löschen</button>
             <button class="btn-secondary" id="managePlayersBtn">👥 Spieler verwalten</button>
             <button class="btn-danger" id="resetBtn">♻️ Elite+ Cloud löschen</button>
           </div>
-          <div class="hint">Runde generieren speichert den sichtbaren Wochen-Spielplan und öffnet danach direkt die Score-Eingabe.</div>
+          <div class="hint" id="wishFlightStatus">Runde generieren speichert den sichtbaren Wochen-Spielplan und öffnet danach direkt die Score-Eingabe.</div>
         </section>
 
         <section class="card">
@@ -795,6 +796,7 @@ body{
     let plannedGroups = null;
     let teeTimes = ["17:20","17:30","17:40","17:50","18:00","18:10"];
     let nearestToPinHole = "";
+    let wishFlight = [];
     let selectedHistoryPlayer = "";
     let adminUnlocked = {};
     let localScores = {};
@@ -849,6 +851,83 @@ body{
         else if(score<=best+0.75){ candidates.push(groups); }
       }
       return candidates[Math.floor(Math.random()*candidates.length)] || buildGroups(shuffle(players), layout);
+    }
+
+    function createGroupsWithWish(players){
+      const wish = wishFlight.filter(p=>players.includes(p));
+      if(!wish.length) return createGroups(players);
+
+      // A Wunsch-Flight is deliberately kept together. The remaining players
+      // are distributed with the normal generator so handicap balance/history
+      // logic continues to work for all other flights.
+      const remaining=players.filter(p=>!wish.includes(p));
+      if(wish.length>4) throw new Error("Ein Wunsch-Flight darf maximal 4 Spieler enthalten.");
+
+      const baseGroups=remaining.length ? createGroups(remaining) : [];
+      const layout=getLayout(players.length);
+      if(layout.length===1) return [wish];
+
+      // Put the Wunsch-Flight into a suitable slot and fill the rest from
+      // the generated groups. For 3/4-player wish groups this preserves them
+      // exactly; if the requested size does not match a standard slot, the
+      // remaining players still stay valid groups.
+      const result=[wish];
+      baseGroups.forEach(g=>result.push(g));
+
+      // If this produces too many/too-small groups, fall back to a clean
+      // deterministic construction while keeping the wish group intact.
+      const valid=result.length===layout.length &&
+        result.every(g=>g.length>=2 && g.length<=4) &&
+        result.flat().length===players.length;
+      return valid ? result : [wish, ...buildGroups(remaining, getLayout(remaining.length))];
+    }
+
+    function setWishFlight(){
+      const pw=prompt("Passwort für Wunsch-Flight eingeben:");
+      if(pw!=="Kosasido"){
+        if(pw!==null) alert("Kein Zugriff.");
+        return;
+      }
+
+      const players=[...selected];
+      if(players.length<3){
+        alert("Bitte zuerst mindestens 3 Spieler auswählen.");
+        return;
+      }
+
+      const current=wishFlight.length ? wishFlight.join(", ") : "";
+      const input=prompt(
+        "Wunsch-Flight festlegen.\n\nSpielernamen durch Komma trennen.\nBeispiel: Carl, Luci, Dolli\n\nAusgewählt sind:\n"+players.join(", "),
+        current
+      );
+      if(input===null) return;
+
+      const names=input.split(",").map(s=>s.trim()).filter(Boolean);
+      const unique=[...new Set(names)];
+      const invalid=unique.filter(n=>!players.includes(n));
+
+      if(unique.length<2 || unique.length>4){
+        alert("Ein Wunsch-Flight muss aus 2 bis 4 Spielern bestehen.");
+        return;
+      }
+      if(invalid.length){
+        alert("Diese Spieler sind nicht ausgewählt: "+invalid.join(", "));
+        return;
+      }
+
+      wishFlight=unique;
+      plannedGroups=createGroupsWithWish(players);
+      renderWeekPlan(plannedGroups);
+
+      const status=document.getElementById("wishFlightStatus");
+      if(status) status.innerHTML=`⭐ Wunsch-Flight aktiv: <strong>${wishFlight.join(" · ")}</strong> · nur mit Passwort änderbar.`;
+    }
+
+    function clearWishFlight(){
+      wishFlight=[];
+      const status=document.getElementById("wishFlightStatus");
+      if(status) status.textContent="Runde generieren speichert den sichtbaren Wochen-Spielplan und öffnet danach direkt die Score-Eingabe.";
+      updatePlan();
     }
 
     function relativeHcpMap(group){
@@ -958,6 +1037,11 @@ body{
     }
     window.togglePlayer=(name)=>{
       selected.has(name)?selected.delete(name):selected.add(name);
+      if(wishFlight.length && !wishFlight.every(p=>selected.has(p))){
+        wishFlight=[];
+        const status=document.getElementById("wishFlightStatus");
+        if(status) status.textContent="Runde generieren speichert den sichtbaren Wochen-Spielplan und öffnet danach direkt die Score-Eingabe.";
+      }
       renderPlayers();
       requestAnimationFrame(()=>updatePlan());
     };
@@ -965,7 +1049,7 @@ body{
     function updatePlan(){
       const players=[...selected];
       if(players.length<3){ plannedGroups=null; renderWeekPlan([]); return; }
-      plannedGroups=createGroups(players);
+      plannedGroups=wishFlight.length ? createGroupsWithWish(players) : createGroups(players);
       renderWeekPlan(plannedGroups);
     }
     window.setTeeTime=(index,value)=>{
@@ -1582,9 +1666,12 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
     document.getElementById("historyPlayerFilter").onchange=e=>{selectedHistoryPlayer=e.target.value; renderPlayerHistory(); renderHistoryFilter();};
     document.getElementById("clearHistoryFilterBtn").onclick=()=>{selectedHistoryPlayer=""; renderHistoryFilter(); renderPlayerHistory();};
     document.getElementById("lastBtn").onclick=()=>{ if(rounds.length) renderRound(rounds[rounds.length-1]); else alert("Noch keine Runde gespeichert."); };
+    document.getElementById("wishFlightBtn").onclick=setWishFlight;
     document.getElementById("generateBtn").onclick=async()=>{
       const players=[...selected]; if(players.length<3){alert("Bitte mindestens 3 Spieler auswählen.");return;}
-      const groups=plannedGroups && normalizeFlight(plannedGroups.flat())===normalizeFlight(players) ? plannedGroups : createGroups(players);
+      const groups=plannedGroups && normalizeFlight(plannedGroups.flat())===normalizeFlight(players)
+        ? plannedGroups
+        : (wishFlight.length ? createGroupsWithWish(players) : createGroups(players));
       const flights=Object.fromEntries(groups.map((g,i)=>[`flight${i+1}`,{players:g,scores:emptyScores(g),ladies:[],saved:false,teeTime:teeTimes[i] || ""}]));
       const round={date:new Date().toLocaleDateString("de-DE"),createdAt:serverTimestamp(),flights};
       try{
