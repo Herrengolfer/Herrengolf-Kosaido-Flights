@@ -896,7 +896,7 @@ body{
 
     function setWishFlight(){
       const pw=prompt("Passwort für Wunsch-Flight eingeben:");
-      if(pw!=="Kosasido"){
+      if(pw!=="Kosaido"){
         if(pw!==null) alert("Kein Zugriff.");
         return;
       }
@@ -1630,12 +1630,12 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
           }
 
           if(titeltraeger){
-            drawRoundRect(ctx,40,y,W-80,titelH,18,"#fff8dc","#e3b51b");
+            drawRoundRect(ctx,40,y,W-80,titelH,18,"#075b45","#075b45");
             ctx.textAlign="left";
-            ctx.fillStyle="#075b45";
+            ctx.fillStyle="#ffffff";
             ctx.font="900 25px Arial";
             ctx.fillText("🏆  TITELTRÄGER",68,y+34);
-            ctx.fillStyle="#111827";
+            ctx.fillStyle="#ffffff";
             ctx.font="800 23px Arial";
             ctx.fillText(titeltraeger,68,y+64);
             y+=titelH+18;
