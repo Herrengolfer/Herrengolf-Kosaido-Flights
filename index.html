@@ -760,6 +760,11 @@ body{
             <input id="todaysBeer" type="text" placeholder="z. B. Füchschen Alt"
               style="min-width:220px;flex:1;max-width:420px;padding:10px 12px;border:1px solid #d6e0da;border-radius:10px;background:#fff;font-weight:700;color:#111827;">
           </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 14px;">
+            <label for="titeltraeger" style="font-weight:800;color:#075b45;">🏆 Titelträger</label>
+            <input id="titeltraeger" type="text" placeholder="z. B. Luci oder Carl & Dolli"
+              style="min-width:220px;flex:1;max-width:420px;padding:10px 12px;border:1px solid #d6e0da;border-radius:10px;background:#fff;font-weight:700;color:#111827;">
+          </div>
           <button class="btn-primary" id="exportFlightCardBtn">📤 Flight Card als Bild exportieren</button>
           <div id="exportStatus" class="muted" style="margin-top:8px;"></div>
         </section>
@@ -802,6 +807,7 @@ body{
     let teeTimes = ["17:20","17:30","17:40","17:50","18:00","18:10"];
     let nearestToPinHole = "";
     let todaysBeer = "";
+    let titeltraeger = "";
     let wishFlight = [];
     let selectedHistoryPlayer = "";
     let adminUnlocked = {};
@@ -1470,6 +1476,7 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
 
     window.setNearestToPin=(value)=>{ nearestToPinHole=value || ""; };
     window.setTodaysBeer=(value)=>{ todaysBeer=String(value||"").trim(); };
+    window.setTiteltraeger=(value)=>{ titeltraeger=String(value||"").trim(); };
 
     async function exportFlightCard(){
       const status=document.getElementById("exportStatus");
@@ -1492,8 +1499,9 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
         const footer=56;
         const ntpH=nearestToPinHole ? 82 : 0;
         const beerH=todaysBeer ? 82 : 0;
+        const titelH=titeltraeger ? 82 : 0;
 
-        let h=header+title+weatherH+24+ntpH+(todaysBeer?beerH+18:0)+footer+courseH;
+        let h=header+title+weatherH+24+ntpH+(todaysBeer?beerH+18:0)+(titeltraeger?titelH+18:0)+footer+courseH;
         groups.forEach(g=>h+=flightHead+Math.max(1,g.length)*playerH+gap);
 
         const canvas=document.createElement("canvas");
@@ -1598,27 +1606,39 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
           y+=weatherH+24;
 
           if(nearestToPinHole){
-            drawRoundRect(ctx,40,y,W-80,ntpH,18,"#fff8dc","#e3b51b");
+            drawRoundRect(ctx,40,y,W-80,ntpH,18,"#075b45","#075b45");
             ctx.textAlign="left";
-            ctx.fillStyle="#075b45";
+            ctx.fillStyle="#ffffff";
             ctx.font="900 25px Arial";
             ctx.fillText("🎯  NEAREST TO THE PIN",68,y+34);
-            ctx.fillStyle="#111827";
+            ctx.fillStyle="#ffffff";
             ctx.font="800 23px Arial";
             ctx.fillText(`Loch ${nearestToPinHole}`,68,y+64);
             y+=ntpH+18;
           }
 
           if(todaysBeer){
-            drawRoundRect(ctx,40,y,W-80,beerH,18,"#fff8dc","#e3b51b");
+            drawRoundRect(ctx,40,y,W-80,beerH,18,"#075b45","#075b45");
             ctx.textAlign="left";
-            ctx.fillStyle="#075b45";
+            ctx.fillStyle="#ffffff";
             ctx.font="900 25px Arial";
             ctx.fillText("🍺  HEUTIGES BIER",68,y+34);
-            ctx.fillStyle="#111827";
+            ctx.fillStyle="#ffffff";
             ctx.font="800 23px Arial";
             ctx.fillText(todaysBeer,68,y+64);
             y+=beerH+18;
+          }
+
+          if(titeltraeger){
+            drawRoundRect(ctx,40,y,W-80,titelH,18,"#fff8dc","#e3b51b");
+            ctx.textAlign="left";
+            ctx.fillStyle="#075b45";
+            ctx.font="900 25px Arial";
+            ctx.fillText("🏆  TITELTRÄGER",68,y+34);
+            ctx.fillStyle="#111827";
+            ctx.font="800 23px Arial";
+            ctx.fillText(titeltraeger,68,y+64);
+            y+=titelH+18;
           }
 
           // Approved beer + golf course image.
@@ -1688,6 +1708,7 @@ const KOSAIDO_LOGO_DATA="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHEAAAB1C
     document.getElementById("lastBtn").onclick=()=>{ if(rounds.length) renderRound(rounds[rounds.length-1]); else alert("Noch keine Runde gespeichert."); };
     document.getElementById("wishFlightBtn").onclick=setWishFlight;
     document.getElementById("todaysBeer").addEventListener("input",e=>setTodaysBeer(e.target.value));
+    document.getElementById("titeltraeger").addEventListener("input",e=>setTiteltraeger(e.target.value));
     document.getElementById("generateBtn").onclick=async()=>{
       const players=[...selected]; if(players.length<3){alert("Bitte mindestens 3 Spieler auswählen.");return;}
       const groups=plannedGroups && normalizeFlight(plannedGroups.flat())===normalizeFlight(players)
