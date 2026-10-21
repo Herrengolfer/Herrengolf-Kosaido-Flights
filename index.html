@@ -619,7 +619,7 @@ body{
       <div class="stack">
         <section class="card">
           <h2>Spieler auswählen</h2>
-          <div class="players" id="players"></div>
+          <div class="players" id="players"><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Luci')">Luci (11.0)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Dolli')">Dolli (16.7)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Dickie')">Dickie (21.2)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Thomas Wimmer')">Thomas Wimmer (19.7)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Thomas Schneider')">Thomas Schneider (21.0)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Jörg')">Jörg (25.0)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Martin')">Martin (18.4)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Carsten')">Carsten (15.7)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Felix')">Felix (15.2)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Carl')">Carl (10.5)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Sascha')">Sascha (19.7)</button><button type="button" class="player" onclick="window.togglePlayer && window.togglePlayer('Adi')">Adi (19.2)</button></div>
           <div class="toolbar">
             <button class="btn-primary" id="generateBtn">🎲 Runde generieren</button>
             <button class="btn-secondary" id="wishFlightBtn">⭐ Wunsch-Flight</button>
@@ -873,7 +873,7 @@ body{
       // are distributed with the normal generator so handicap balance/history
       // logic continues to work for all other flights.
       const remaining=players.filter(p=>!wish.includes(p));
-      if(wish.length>4) throw new Error("Ein Wunsch-Flight darf maximal 4 Spieler enthalten.");
+      if(wish.length>5) throw new Error("Ein Wunsch-Flight darf maximal 5 Spieler enthalten.");
 
       const baseGroups=remaining.length ? createGroups(remaining) : [];
       const layout=getLayout(players.length);
@@ -889,7 +889,7 @@ body{
       // If this produces too many/too-small groups, fall back to a clean
       // deterministic construction while keeping the wish group intact.
       const valid=result.length===layout.length &&
-        result.every(g=>g.length>=2 && g.length<=4) &&
+        result.every(g=>g.length>=2 && g.length<=5) &&
         result.flat().length===players.length;
       return valid ? result : [wish, ...buildGroups(remaining, getLayout(remaining.length))];
     }
@@ -918,8 +918,8 @@ body{
       const unique=[...new Set(names)];
       const invalid=unique.filter(n=>!players.includes(n));
 
-      if(unique.length<2 || unique.length>4){
-        alert("Ein Wunsch-Flight muss aus 2 bis 4 Spielern bestehen.");
+      if(unique.length<2 || unique.length>5){
+        alert("Ein Wunsch-Flight muss aus 2 bis 5 Spielern bestehen.");
         return;
       }
       if(invalid.length){
@@ -1264,6 +1264,9 @@ body{
       pointsChart=new Chart(document.getElementById("pointsChart").getContext("2d"),{type:"bar",data:{labels,datasets:[{label:"Ø Netto-SF",data:labels.map(p=>stats[p].rounds?+(stats[p].totalNetSF/stats[p].rounds).toFixed(1):0)}]},options});
     }
 
+
+    // Show the default player list immediately; cloud metadata can update it afterward.
+    renderPlayers();
 
     async function loadPlayerList(){
       try{
